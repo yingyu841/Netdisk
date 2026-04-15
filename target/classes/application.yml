@@ -1,0 +1,42 @@
+server:
+  port: ${HTTP_PORT:8081}
+
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:netdisk}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123123y}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.netdisk.pojo.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+
+app:
+  jwt-secret: ${JWT_SECRET:replace-with-strong-random-secret-at-least-32-chars}
+  access-token-seconds: 7200
+  refresh-token-seconds: 604800
+  verification-code-seconds: 300
+  verification-send-interval-seconds: 60
+#  aliyun:
+#    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+#    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
+#    sms-region: ${ALIYUN_SMS_REGION:cn-hangzhou}
+#    sms-sign-name: ${ALIYUN_SMS_SIGN_NAME:}
+#    sms-template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+#    dm-region: ${ALIYUN_DM_REGION:cn-hangzhou}
+#    dm-from-address: ${ALIYUN_DM_FROM_ADDRESS:}
+#    dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
+#    dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
+  aliyun:
+    access-key-id: LTAI5t6w7ZgJmjd4vij5qvPz
+    access-key-secret: t8X8FPyW0OOEFXg5ee1vQ4RJbIKyAl
+    sms-region: ${ALIYUN_SMS_REGION:cn-hangzhou}
+    sms-sign-name: ${ALIYUN_SMS_SIGN_NAME:}
+    sms-template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+    dm-region: ${ALIYUN_DM_REGION:cn-hangzhou}
+    dm-from-address: hello@t1.pdaymlg.cn
+    dm-from-alias: MyDisk
+    dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
