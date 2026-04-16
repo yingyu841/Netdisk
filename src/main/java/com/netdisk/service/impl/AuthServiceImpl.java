@@ -15,6 +15,7 @@ import com.netdisk.common.ErrorCode;
 import com.netdisk.common.exception.BizException;
 import com.netdisk.config.AppProperties;
 import com.netdisk.service.AuthService;
+import com.netdisk.service.UserResourceInitService;
 import com.netdisk.service.VerificationService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,15 +35,17 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final VerificationService verificationService;
+    private final UserResourceInitService userResourceInitService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AppProperties properties;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository, VerificationService verificationService,
-                           JwtTokenProvider jwtTokenProvider, AppProperties properties) {
+                           UserResourceInitService userResourceInitService, JwtTokenProvider jwtTokenProvider, AppProperties properties) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.verificationService = verificationService;
+        this.userResourceInitService = userResourceInitService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.properties = properties;
     }
@@ -63,6 +66,10 @@ public class AuthServiceImpl implements AuthService {
         if (hasMobile && userRepository.countByMobile(mobile) > 0) {
             throw new BizException(ErrorCode.CONFLICT, 409, "邮箱或手机号已被注册");
         }
+        String channel = hasEmail ? "email" : "sms";
+        if (!verificationService.verifyAndConsume(channel, email, mobile, req.getVerificationCode())) {
+            throw new BizException(ErrorCode.VERIFICATION_WRONG, 400, "验证码错误或已过期");
+        }
 
         UserEntity user = new UserEntity();
         user.setUserUuid("u_" + UUID.randomUUID().toString().replace("-", ""));
@@ -76,6 +83,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (DuplicateKeyException ex) {
             throw new BizException(ErrorCode.CONFLICT, 409, "邮箱或手机号已被注册");
         }
+        userResourceInitService.ensureRootFolder(user.getUserUuid());
 
         return new UserProfileVO(user.getUserUuid(), user.getNickname(), user.getAvatarUrl());
     }

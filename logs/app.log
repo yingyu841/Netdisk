@@ -46,3 +46,66 @@ This generated password is for development use only. Your security configuration
 2026-04-15 20:08:44.245 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Initializing Servlet 'dispatcherServlet'
 2026-04-15 20:08:44.246 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Completed initialization in 1 ms
 2026-04-15 20:08:45.717 INFO  [http-nio-8081-exec-1] c.netdisk.common.web.RequestIdFilter [requestId=7a142865-edc1-474b-ad34-80e13cc225f4] - access method=POST path=/api/v1/auth/verification/send status=200 costMs=1458 ip=127.0.0.1 userId=null requestId=7a142865-edc1-474b-ad34-80e13cc225f4 bizCode=0 bizMessage=ok
+2026-04-15 21:34:49.302 INFO  [background-preinit] o.h.validator.internal.util.Version [requestId=] - HV000001: Hibernate Validator 6.2.5.Final
+2026-04-15 21:34:49.314 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - Starting NetdiskApplication using Java 23.0.2 on LAPTOP-D4UVUV0N with PID 15232 (F:\ai_project\netdisk\java\target\classes started by yingyu in F:\ai_project\netdisk\java)
+2026-04-15 21:34:49.314 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - No active profile set, falling back to 1 default profile: "default"
+2026-04-15 21:34:50.467 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer [requestId=] - Tomcat initialized with port(s): 8081 (http)
+2026-04-15 21:34:50.474 INFO  [main] o.a.coyote.http11.Http11NioProtocol [requestId=] - Initializing ProtocolHandler ["http-nio-8081"]
+2026-04-15 21:34:50.475 INFO  [main] o.a.catalina.core.StandardService [requestId=] - Starting service [Tomcat]
+2026-04-15 21:34:50.476 INFO  [main] o.a.catalina.core.StandardEngine [requestId=] - Starting Servlet engine: [Apache Tomcat/9.0.83]
+2026-04-15 21:34:50.575 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] [requestId=] - Initializing Spring embedded WebApplicationContext
+2026-04-15 21:34:50.576 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext [requestId=] - Root WebApplicationContext: initialization completed in 1221 ms
+2026-04-15 21:34:50.937 WARN  [main] o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [requestId=] - 
+
+Using generated security password: a4a72c9c-c938-4fc2-8d5d-01dc447caf11
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-04-15 21:34:51.030 INFO  [main] o.s.s.web.DefaultSecurityFilterChain [requestId=] - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6f85ee02, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@679d0be8, org.springframework.security.web.context.SecurityContextPersistenceFilter@445bce9a, org.springframework.security.web.header.HeaderWriterFilter@5aa781f2, org.springframework.security.web.authentication.logout.LogoutFilter@6e24ce51, com.netdisk.common.web.RequestIdFilter@3a2e9f5b, com.netdisk.security.JwtAuthFilter@76d72b5b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5e1a5f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@31b0f02, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@6c075e9d, org.springframework.security.web.session.SessionManagementFilter@7fe8c7db, org.springframework.security.web.access.ExceptionTranslationFilter@11b5f4e2, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@7ab2a07e]
+2026-04-15 21:34:51.310 INFO  [main] o.a.coyote.http11.Http11NioProtocol [requestId=] - Starting ProtocolHandler ["http-nio-8081"]
+2026-04-15 21:34:51.327 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer [requestId=] - Tomcat started on port(s): 8081 (http) with context path ''
+2026-04-15 21:34:51.335 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - Started NetdiskApplication in 2.457 seconds (JVM running for 3.121)
+2026-04-15 22:41:15.892 INFO  [http-nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] [requestId=] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-15 22:41:15.892 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Initializing Servlet 'dispatcherServlet'
+2026-04-15 22:41:15.894 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Completed initialization in 2 ms
+2026-04-15 22:41:15.956 INFO  [http-nio-8081-exec-1] c.netdisk.common.web.RequestIdFilter [requestId=db1bc086-9922-4df8-b704-b67ee2ef3801] - access method=GET path=/api/v1/resources?parentId=1&keyword=&page=&pageSize= status=403 costMs=41 ip=127.0.0.1 userId=null requestId=db1bc086-9922-4df8-b704-b67ee2ef3801 bizCode= bizMessage=
+2026-04-15 22:41:27.850 INFO  [http-nio-8081-exec-2] c.netdisk.common.web.RequestIdFilter [requestId=34e820ee-c7af-4111-82b1-2bfc41f0d01f] - access method=GET path=/api/v1/resources?parentId&keyword&page&pageSize status=403 costMs=3 ip=127.0.0.1 userId=null requestId=34e820ee-c7af-4111-82b1-2bfc41f0d01f bizCode= bizMessage=
+2026-04-15 22:41:38.165 INFO  [http-nio-8081-exec-3] c.netdisk.common.web.RequestIdFilter [requestId=2628ebf6-967b-40ad-b2b0-42d2528df108] - access method=GET path=/api/v1/resources?parentId&keyword&page&pageSize status=403 costMs=4 ip=127.0.0.1 userId=null requestId=2628ebf6-967b-40ad-b2b0-42d2528df108 bizCode= bizMessage=
+2026-04-15 22:42:32.483 INFO  [http-nio-8081-exec-4] c.netdisk.common.web.RequestIdFilter [requestId=f482c640-c740-481c-b85c-d5a634df8451] - access method=GET path=/api/v1/resources?parentId=1&keyword&page&pageSize status=403 costMs=2 ip=127.0.0.1 userId=null requestId=f482c640-c740-481c-b85c-d5a634df8451 bizCode= bizMessage=
+2026-04-15 22:45:10.168 INFO  [http-nio-8081-exec-6] com.zaxxer.hikari.HikariDataSource [requestId=b82a1691-6913-4e14-9bc7-5895f4dcba3d] - HikariPool-1 - Starting...
+2026-04-15 22:45:10.714 INFO  [http-nio-8081-exec-6] com.zaxxer.hikari.HikariDataSource [requestId=b82a1691-6913-4e14-9bc7-5895f4dcba3d] - HikariPool-1 - Start completed.
+2026-04-15 22:45:11.015 INFO  [http-nio-8081-exec-6] c.netdisk.common.web.RequestIdFilter [requestId=b82a1691-6913-4e14-9bc7-5895f4dcba3d] - access method=POST path=/api/v1/auth/login status=200 costMs=1026 ip=127.0.0.1 userId=null requestId=b82a1691-6913-4e14-9bc7-5895f4dcba3d bizCode=0 bizMessage=ok
+2026-04-15 22:46:00.383 WARN  [http-nio-8081-exec-7] c.n.c.e.GlobalExceptionHandler [requestId=44dbaae0-ee63-4b2e-8c83-b9c0422d9dff] - biz exception requestId=44dbaae0-ee63-4b2e-8c83-b9c0422d9dff code=1001001 message=未授权
+2026-04-15 22:46:00.384 INFO  [http-nio-8081-exec-7] c.netdisk.common.web.RequestIdFilter [requestId=44dbaae0-ee63-4b2e-8c83-b9c0422d9dff] - access method=GET path=/api/v1/resources?parentId=1&keyword&page&pageSize status=200 costMs=34 ip=127.0.0.1 userId=null requestId=44dbaae0-ee63-4b2e-8c83-b9c0422d9dff bizCode=1001001 bizMessage=未授权
+2026-04-15 22:52:36.674 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource [requestId=] - HikariPool-1 - Shutdown initiated...
+2026-04-15 22:52:36.682 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource [requestId=] - HikariPool-1 - Shutdown completed.
+2026-04-15 22:52:41.048 INFO  [background-preinit] o.h.validator.internal.util.Version [requestId=] - HV000001: Hibernate Validator 6.2.5.Final
+2026-04-15 22:52:41.053 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - Starting NetdiskApplication using Java 23.0.2 on LAPTOP-D4UVUV0N with PID 16476 (F:\ai_project\netdisk\java\target\classes started by yingyu in F:\ai_project\netdisk\java)
+2026-04-15 22:52:41.054 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - No active profile set, falling back to 1 default profile: "default"
+2026-04-15 22:52:42.103 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer [requestId=] - Tomcat initialized with port(s): 8081 (http)
+2026-04-15 22:52:42.113 INFO  [main] o.a.coyote.http11.Http11NioProtocol [requestId=] - Initializing ProtocolHandler ["http-nio-8081"]
+2026-04-15 22:52:42.119 INFO  [main] o.a.catalina.core.StandardService [requestId=] - Starting service [Tomcat]
+2026-04-15 22:52:42.119 INFO  [main] o.a.catalina.core.StandardEngine [requestId=] - Starting Servlet engine: [Apache Tomcat/9.0.83]
+2026-04-15 22:52:42.210 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] [requestId=] - Initializing Spring embedded WebApplicationContext
+2026-04-15 22:52:42.210 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext [requestId=] - Root WebApplicationContext: initialization completed in 1110 ms
+2026-04-15 22:52:42.538 WARN  [main] o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [requestId=] - 
+
+Using generated security password: 11beee4b-b9ad-490e-927e-2702b791bb4d
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-04-15 22:52:42.610 INFO  [main] o.s.s.web.DefaultSecurityFilterChain [requestId=] - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@7d3691e1, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@46a123e4, org.springframework.security.web.context.SecurityContextPersistenceFilter@3dc68586, org.springframework.security.web.header.HeaderWriterFilter@9fe720a, org.springframework.security.web.authentication.logout.LogoutFilter@6aa5974e, com.netdisk.common.web.RequestIdFilter@7b3cde6f, com.netdisk.security.JwtAuthFilter@712c5463, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@646427f7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@31efacad, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@44bc2449, org.springframework.security.web.session.SessionManagementFilter@2cfe272f, org.springframework.security.web.access.ExceptionTranslationFilter@6ffd4c0d, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@5eed6dfb]
+2026-04-15 22:52:42.884 INFO  [main] o.a.coyote.http11.Http11NioProtocol [requestId=] - Starting ProtocolHandler ["http-nio-8081"]
+2026-04-15 22:52:42.900 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer [requestId=] - Tomcat started on port(s): 8081 (http) with context path ''
+2026-04-15 22:52:42.906 INFO  [main] com.netdisk.NetdiskApplication [requestId=] - Started NetdiskApplication in 2.257 seconds (JVM running for 2.929)
+2026-04-15 22:53:06.554 INFO  [http-nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] [requestId=] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-15 22:53:06.554 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Initializing Servlet 'dispatcherServlet'
+2026-04-15 22:53:06.555 INFO  [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet [requestId=] - Completed initialization in 1 ms
+2026-04-15 22:53:06.728 INFO  [http-nio-8081-exec-1] com.zaxxer.hikari.HikariDataSource [requestId=b7c75441-2770-456b-aa89-2e2c2e3f1843] - HikariPool-1 - Starting...
+2026-04-15 22:53:07.090 INFO  [http-nio-8081-exec-1] com.zaxxer.hikari.HikariDataSource [requestId=b7c75441-2770-456b-aa89-2e2c2e3f1843] - HikariPool-1 - Start completed.
+2026-04-15 22:53:07.284 INFO  [http-nio-8081-exec-1] c.netdisk.common.web.RequestIdFilter [requestId=b7c75441-2770-456b-aa89-2e2c2e3f1843] - access method=POST path=/api/v1/auth/login status=200 costMs=714 ip=127.0.0.1 userId=null requestId=b7c75441-2770-456b-aa89-2e2c2e3f1843 bizCode=0 bizMessage=ok
+2026-04-15 22:54:59.680 WARN  [http-nio-8081-exec-3] c.n.c.e.GlobalExceptionHandler [requestId=f287a29a-b20f-4f90-927d-8a829f6308b7] - biz exception requestId=f287a29a-b20f-4f90-927d-8a829f6308b7 code=1002001 message=目录不存在
+2026-04-15 22:54:59.682 INFO  [http-nio-8081-exec-3] c.netdisk.common.web.RequestIdFilter [requestId=f287a29a-b20f-4f90-927d-8a829f6308b7] - access method=GET path=/api/v1/resources?parentId=1&keyword&page&pageSize status=200 costMs=42 ip=127.0.0.1 userId=u_7980bbe750cb46fc82aad44f7e1db227 requestId=f287a29a-b20f-4f90-927d-8a829f6308b7 bizCode=1002001 bizMessage=目录不存在
+2026-04-15 22:55:11.610 WARN  [http-nio-8081-exec-4] c.n.c.e.GlobalExceptionHandler [requestId=e7fe49b7-c2d2-4b8d-990d-07cf22fe2c08] - biz exception requestId=e7fe49b7-c2d2-4b8d-990d-07cf22fe2c08 code=1002001 message=目录不存在
+2026-04-15 22:55:11.613 INFO  [http-nio-8081-exec-4] c.netdisk.common.web.RequestIdFilter [requestId=e7fe49b7-c2d2-4b8d-990d-07cf22fe2c08] - access method=GET path=/api/v1/resources?parentId=1&keyword&page&pageSize status=200 costMs=9 ip=127.0.0.1 userId=u_7980bbe750cb46fc82aad44f7e1db227 requestId=e7fe49b7-c2d2-4b8d-990d-07cf22fe2c08 bizCode=1002001 bizMessage=目录不存在
+2026-04-15 22:56:14.362 INFO  [http-nio-8081-exec-6] c.netdisk.common.web.RequestIdFilter [requestId=35c3e031-e7dc-4209-9963-d2ff4afc38ef] - access method=GET path=/api/v1/resources?parentId=&keyword&page&pageSize status=200 costMs=57 ip=127.0.0.1 userId=u_7980bbe750cb46fc82aad44f7e1db227 requestId=35c3e031-e7dc-4209-9963-d2ff4afc38ef bizCode=0 bizMessage=ok

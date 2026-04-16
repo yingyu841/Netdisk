@@ -26,8 +26,8 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<String, Object>();
         claims.put("sid", sessionUuid);
         return Jwts.builder()
-                .setSubject(userUuid)
                 .setClaims(claims)
+                .setSubject(userUuid)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(seconds)))
                 .signWith(secretKey, SignatureAlgorithm.HS256)

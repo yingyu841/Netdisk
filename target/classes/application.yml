@@ -31,12 +31,12 @@ app:
 #    dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
 #    dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
   aliyun:
-    access-key-id: LTAI5t6w7ZgJmjd4vij5qvPz
-    access-key-secret: t8X8FPyW0OOEFXg5ee1vQ4RJbIKyAl
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
     sms-region: ${ALIYUN_SMS_REGION:cn-hangzhou}
     sms-sign-name: ${ALIYUN_SMS_SIGN_NAME:}
     sms-template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
     dm-region: ${ALIYUN_DM_REGION:cn-hangzhou}
-    dm-from-address: hello@t1.pdaymlg.cn
-    dm-from-alias: MyDisk
+    dm-from-address: ${ALIYUN_DM_FROM_ADDRESS:}
+    dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
     dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
