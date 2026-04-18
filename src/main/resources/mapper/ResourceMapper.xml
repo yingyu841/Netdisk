@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.netdisk.mapper.ResourceMapper">
+
+    <select id="findRootFolderByUserUuid" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.resource_type = 'folder'
+          AND r.parent_id IS NULL
+          AND r.is_deleted = 0
+        ORDER BY r.id ASC
+        LIMIT 1
+    </select>
+
+    <select id="findFolderByResourceUuid" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.resource_uuid = #{resourceUuid}
+          AND r.resource_type = 'folder'
+          AND r.is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="findByResourceUuid" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.resource_uuid = #{resourceUuid}
+        LIMIT 1
+    </select>
+
+    <select id="findActiveByResourceUuid" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.resource_uuid = #{resourceUuid}
+          AND r.is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="countByParent" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.parent_id = #{parentId}
+          AND r.is_deleted = 0
+          <if test="keyword != null and keyword != ''">
+              AND r.name_normalized LIKE CONCAT('%', #{keyword}, '%')
+          </if>
+    </select>
+
+    <select id="listByParent" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.parent_id = #{parentId}
+          AND r.is_deleted = 0
+          <if test="keyword != null and keyword != ''">
+              AND r.name_normalized LIKE CONCAT('%', #{keyword}, '%')
+          </if>
+        ORDER BY CASE WHEN r.resource_type = 'folder' THEN 0 ELSE 1 END ASC,
+                 r.name_normalized ASC,
+                 r.id ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="listActiveChildrenByParentId" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT id,
+               resource_uuid,
+               space_id,
+               parent_id,
+               resource_type,
+               name,
+               name_normalized,
+               extension,
+               size_bytes,
+               object_id,
+               path_cache,
+               owner_user_id,
+               is_deleted,
+               deleted_at,
+               created_at,
+               updated_at
+        FROM resources
+        WHERE owner_user_id = #{ownerUserId}
+          AND parent_id = #{parentId}
+          AND is_deleted = 0
+        ORDER BY CASE WHEN resource_type = 'folder' THEN 0 ELSE 1 END ASC,
+                 name_normalized ASC,
+                 id ASC
+    </select>
+
+    <insert id="insertRootFolder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO resources (resource_uuid, space_id, parent_id, resource_type, name, name_normalized, extension, size_bytes,
+                               object_id, path_cache, owner_user_id, is_deleted, created_at, updated_at)
+        VALUES (#{resourceUuid}, #{spaceId}, NULL, 'folder', #{name}, #{nameNormalized}, NULL, 0, NULL, #{pathCache},
+                #{ownerUserId}, 0, NOW(), NOW())
+    </insert>
+
+    <select id="findById" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT id,
+               resource_uuid,
+               space_id,
+               parent_id,
+               resource_type,
+               name,
+               name_normalized,
+               extension,
+               size_bytes,
+               object_id,
+               path_cache,
+               owner_user_id,
+               is_deleted,
+               deleted_at,
+               created_at,
+               updated_at
+        FROM resources
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <insert id="insertFileResource" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO resources (resource_uuid, space_id, parent_id, resource_type, name, name_normalized, extension, size_bytes,
+                               object_id, path_cache, owner_user_id, is_deleted, created_at, updated_at)
+        VALUES (#{resourceUuid}, #{spaceId}, #{parentId}, 'file', #{name}, #{nameNormalized}, #{extension}, #{sizeBytes}, #{objectId},
+                #{pathCache}, #{ownerUserId}, 0, NOW(), NOW())
+    </insert>
+
+    <insert id="insertFolderResource" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO resources (resource_uuid, space_id, parent_id, resource_type, name, name_normalized, extension, size_bytes,
+                               object_id, path_cache, owner_user_id, is_deleted, created_at, updated_at)
+        VALUES (#{resourceUuid}, #{spaceId}, #{parentId}, 'folder', #{name}, #{nameNormalized}, NULL, 0, NULL, #{pathCache},
+                #{ownerUserId}, 0, NOW(), NOW())
+    </insert>
+
+    <update id="updateParentAndNameAndPath">
+        UPDATE resources
+        SET parent_id = #{parentId},
+            name = #{name},
+            name_normalized = #{nameNormalized},
+            path_cache = #{pathCache},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="updateParentAndNameAndPathAnyStatus">
+        UPDATE resources
+        SET parent_id = #{parentId},
+            name = #{name},
+            name_normalized = #{nameNormalized},
+            path_cache = #{pathCache},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateNameAndPath">
+        UPDATE resources
+        SET name = #{name},
+            name_normalized = #{nameNormalized},
+            path_cache = #{pathCache},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="updatePathCachePrefix">
+        UPDATE resources
+        SET path_cache = CONCAT(#{newPrefix}, SUBSTRING(path_cache, CHAR_LENGTH(#{oldPrefix}) + 1)),
+            updated_at = NOW()
+        WHERE owner_user_id = #{ownerUserId}
+          AND is_deleted = 0
+          AND path_cache LIKE CONCAT(#{oldPrefix}, '%')
+    </update>
+
+    <update id="updatePathCachePrefixAll">
+        UPDATE resources
+        SET path_cache = CONCAT(#{newPrefix}, SUBSTRING(path_cache, CHAR_LENGTH(#{oldPrefix}) + 1)),
+            updated_at = NOW()
+        WHERE owner_user_id = #{ownerUserId}
+          AND path_cache LIKE CONCAT(#{oldPrefix}, '%')
+    </update>
+
+    <update id="softDeleteById">
+        UPDATE resources
+        SET is_deleted = 1,
+            deleted_at = NOW(),
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="softDeleteByPathPrefix">
+        UPDATE resources
+        SET is_deleted = 1,
+            deleted_at = NOW(),
+            updated_at = NOW()
+        WHERE owner_user_id = #{ownerUserId}
+          AND is_deleted = 0
+          AND path_cache LIKE CONCAT(#{pathPrefix}, '%')
+    </update>
+
+    <update id="restoreById">
+        UPDATE resources
+        SET is_deleted = 0,
+            deleted_at = NULL,
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 1
+    </update>
+
+    <update id="restoreByPathPrefix">
+        UPDATE resources
+        SET is_deleted = 0,
+            deleted_at = NULL,
+            updated_at = NOW()
+        WHERE owner_user_id = #{ownerUserId}
+          AND is_deleted = 1
+          AND path_cache LIKE CONCAT(#{pathPrefix}, '%')
+    </update>
+
+    <select id="countActiveByParentAndNameNormalized" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM resources
+        WHERE parent_id = #{parentId}
+          AND name_normalized = #{nameNormalized}
+          AND is_deleted = 0
+    </select>
+
+    <select id="countActiveByParentAndNameNormalizedExcludeId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM resources
+        WHERE parent_id = #{parentId}
+          AND name_normalized = #{nameNormalized}
+          AND id != #{excludeId}
+          AND is_deleted = 0
+    </select>
+
+    <select id="findActiveRecycleEntryByResourceId" resultType="com.netdisk.pojo.entity.RecycleEntry">
+        SELECT id,
+               resource_id,
+               space_id,
+               deleted_by_user_id,
+               original_parent_id,
+               deleted_at,
+               purge_at,
+               restored_at,
+               created_at
+        FROM recycle_entries
+        WHERE resource_id = #{resourceId}
+          AND restored_at IS NULL
+        LIMIT 1
+    </select>
+
+    <insert id="insertRecycleEntry" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO recycle_entries (resource_id, space_id, deleted_by_user_id, original_parent_id, deleted_at, purge_at, restored_at, created_at)
+        VALUES (#{resourceId}, #{spaceId}, #{deletedByUserId}, #{originalParentId}, NOW(), #{purgeAt}, NULL, NOW())
+    </insert>
+
+    <update id="markRecycleEntryRestored">
+        UPDATE recycle_entries
+        SET restored_at = NOW()
+        WHERE id = #{id}
+          AND restored_at IS NULL
+    </update>
+
+    <select id="listFoldersByUserUuid" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+                 JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND r.resource_type = 'folder'
+          AND r.is_deleted = 0
+        ORDER BY r.parent_id ASC, r.name_normalized ASC, r.id ASC
+    </select>
+
+    <select id="countRecycleBin" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM recycle_entries e
+                 INNER JOIN resources r ON r.id = e.resource_id
+                 INNER JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND e.restored_at IS NULL
+          AND r.is_deleted = 1
+        <if test="keyword != null and keyword != ''">
+            AND r.name_normalized LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <select id="listRecycleBin" resultType="com.netdisk.pojo.entity.RecycleBinRow">
+        SELECT r.resource_uuid AS resourceUuid,
+               r.name,
+               r.resource_type AS resourceType,
+               r.extension,
+               r.size_bytes AS sizeBytes,
+               r.updated_at AS updatedAt,
+               e.deleted_at AS deletedAt,
+               e.purge_at AS purgeAt,
+               op.resource_uuid AS originalParentUuid
+        FROM recycle_entries e
+                 INNER JOIN resources r ON r.id = e.resource_id
+                 INNER JOIN users u ON r.owner_user_id = u.id
+                 LEFT JOIN resources op ON op.id = e.original_parent_id
+        WHERE u.user_uuid = #{userUuid}
+          AND e.restored_at IS NULL
+          AND r.is_deleted = 1
+        <if test="keyword != null and keyword != ''">
+            AND r.name_normalized LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY e.deleted_at DESC, r.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="listRecycleRootResourceUuids" resultType="java.lang.String">
+        SELECT r.resource_uuid
+        FROM recycle_entries e
+                 INNER JOIN resources r ON r.id = e.resource_id
+                 INNER JOIN users u ON r.owner_user_id = u.id
+        WHERE u.user_uuid = #{userUuid}
+          AND e.restored_at IS NULL
+          AND r.is_deleted = 1
+        ORDER BY e.deleted_at ASC, r.id ASC
+    </select>
+
+    <select id="listDeletedSubtreeForPurge" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+        WHERE r.owner_user_id = #{ownerUserId}
+          AND r.is_deleted = 1
+        <choose>
+            <when test="folderPathPrefix != null and folderPathPrefix != ''">
+                AND (r.id = #{rootId} OR r.path_cache LIKE CONCAT(#{folderPathPrefix}, '%'))
+            </when>
+            <otherwise>
+                AND r.id = #{rootId}
+            </otherwise>
+        </choose>
+        ORDER BY CHAR_LENGTH(r.path_cache) DESC, r.id DESC
+    </select>
+
+    <select id="countByObjectId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM resources
+        WHERE object_id = #{objectId}
+    </select>
+
+    <delete id="hardDeleteById">
+        DELETE
+        FROM resources
+        WHERE id = #{id}
+          AND owner_user_id = #{ownerUserId}
+    </delete>
+
+    <delete id="deleteRecycleEntryByResourceId">
+        DELETE
+        FROM recycle_entries
+        WHERE resource_id = #{resourceId}
+          AND restored_at IS NULL
+    </delete>
+
+    <delete id="deleteResourceAclByResourceIds">
+        DELETE
+        FROM resource_acl
+        WHERE resource_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteShareResourcesByResourceIds">
+        DELETE
+        FROM share_resources
+        WHERE resource_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <update id="nullifyUploadSessionParentByResourceIds">
+        UPDATE upload_sessions
+        SET parent_resource_id = NULL,
+            updated_at = NOW()
+        WHERE parent_resource_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 回收站表实体。
  */
 @Data
-public class RecycleEntryEntity {
+public class RecycleEntry {
     private Long id;
     private Long resourceId;
     private Long spaceId;

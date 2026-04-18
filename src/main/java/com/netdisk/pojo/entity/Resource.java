@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 资源元数据表实体。
  */
 @Data
-public class ResourceEntity {
+public class Resource {
     private Long id;
     private String resourceUuid;
     private Long spaceId;

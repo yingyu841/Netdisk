@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 分享链接表实体。
  */
 @Data
-public class ShareEntity {
+public class Share {
     private Long id;
     private String shareUuid;
     private Long spaceId;

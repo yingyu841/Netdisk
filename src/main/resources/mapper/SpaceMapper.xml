@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.netdisk.mapper.SpaceRepository">
+<mapper namespace="com.netdisk.mapper.SpaceMapper">
 
-    <select id="findPersonalByOwnerUserId" resultType="com.netdisk.pojo.entity.SpaceEntity">
+    <select id="findPersonalByOwnerUserId" resultType="com.netdisk.pojo.entity.Space">
         SELECT id, space_uuid, owner_user_id, name, space_type, status, created_at, updated_at
         FROM spaces
         WHERE owner_user_id = #{ownerUserId}

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 分享访问日志表实体。
  */
 @Data
-public class ShareAccessLogEntity {
+public class ShareAccessLog {
     private Long id;
     private Long shareId;
     private Long visitorUserId;

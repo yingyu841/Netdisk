@@ -21,7 +21,7 @@ public class SecurityConfig {
         http.csrf().disable()
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeRequests(c -> c
-                        .antMatchers("/healthz", "/s/**", "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/verification/send").permitAll()
+                        .antMatchers("/healthz", "/s/**", "/api/v1/file-access", "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/verification/send").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthFilter, RequestIdFilter.class);

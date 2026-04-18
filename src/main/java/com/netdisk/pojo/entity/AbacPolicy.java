@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * ABAC 策略表实体。
  */
 @Data
-public class AbacPolicyEntity {
+public class AbacPolicy {
     private Long id;
     private String policyUuid;
     private String policyScope;

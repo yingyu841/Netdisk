@@ -2,12 +2,12 @@ package com.netdisk.service.impl;
 
 import com.netdisk.common.ErrorCode;
 import com.netdisk.common.exception.BizException;
-import com.netdisk.mapper.ResourceRepository;
-import com.netdisk.mapper.SpaceRepository;
-import com.netdisk.mapper.UserRepository;
-import com.netdisk.pojo.entity.ResourceEntity;
-import com.netdisk.pojo.entity.SpaceEntity;
-import com.netdisk.pojo.entity.UserEntity;
+import com.netdisk.mapper.ResourceMapper;
+import com.netdisk.mapper.SpaceMapper;
+import com.netdisk.mapper.UserMapper;
+import com.netdisk.pojo.entity.Resource;
+import com.netdisk.pojo.entity.Space;
+import com.netdisk.pojo.entity.User;
 import com.netdisk.service.UserResourceInitService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,14 +19,14 @@ import java.util.UUID;
  */
 @Service
 public class UserResourceInitServiceImpl implements UserResourceInitService {
-    private final UserRepository userRepository;
-    private final SpaceRepository spaceRepository;
-    private final ResourceRepository resourceRepository;
+    private final UserMapper userRepository;
+    private final SpaceMapper spaceRepository;
+    private final ResourceMapper resourceRepository;
 
     public UserResourceInitServiceImpl(
-            UserRepository userRepository,
-            SpaceRepository spaceRepository,
-            ResourceRepository resourceRepository) {
+            UserMapper userRepository,
+            SpaceMapper spaceRepository,
+            ResourceMapper resourceRepository) {
         this.userRepository = userRepository;
         this.spaceRepository = spaceRepository;
         this.resourceRepository = resourceRepository;
@@ -34,24 +34,24 @@ public class UserResourceInitServiceImpl implements UserResourceInitService {
 
     @Override
     @Transactional
-    public ResourceEntity ensureRootFolder(String userUuid) {
+    public Resource ensureRootFolder(String userUuid) {
         String normalizedUserUuid = trim(userUuid);
         if (normalizedUserUuid.isEmpty() || "null".equalsIgnoreCase(normalizedUserUuid)) {
             throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
         }
-        ResourceEntity root = resourceRepository.findRootFolderByUserUuid(normalizedUserUuid);
+        Resource root = resourceRepository.findRootFolderByUserUuid(normalizedUserUuid);
         if (root != null) {
             return root;
         }
 
-        UserEntity user = userRepository.findByUserUuid(normalizedUserUuid);
+        User user = userRepository.findByUserUuid(normalizedUserUuid);
         if (user == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
         }
 
-        SpaceEntity space = spaceRepository.findPersonalByOwnerUserId(user.getId());
+        Space space = spaceRepository.findPersonalByOwnerUserId(user.getId());
         if (space == null) {
-            space = new SpaceEntity();
+            space = new Space();
             space.setSpaceUuid(UUID.randomUUID().toString());
             space.setOwnerUserId(user.getId());
             space.setName("个人空间");
@@ -60,7 +60,7 @@ public class UserResourceInitServiceImpl implements UserResourceInitService {
             spaceRepository.insert(space);
         }
 
-        ResourceEntity rootFolder = new ResourceEntity();
+        Resource rootFolder = new Resource();
         rootFolder.setResourceUuid(UUID.randomUUID().toString());
         rootFolder.setSpaceId(space.getId());
         rootFolder.setName("我的文件");
@@ -69,7 +69,7 @@ public class UserResourceInitServiceImpl implements UserResourceInitService {
         rootFolder.setOwnerUserId(user.getId());
         resourceRepository.insertRootFolder(rootFolder);
 
-        ResourceEntity created = resourceRepository.findRootFolderByUserUuid(normalizedUserUuid);
+        Resource created = resourceRepository.findRootFolderByUserUuid(normalizedUserUuid);
         if (created == null) {
             throw new BizException(ErrorCode.INTERNAL, 500, "根目录初始化失败");
         }

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 资源 ACL 表实体。
  */
 @Data
-public class ResourceAclEntity {
+public class ResourceAcl {
     private Long id;
     private Long resourceId;
     private String subjectType;

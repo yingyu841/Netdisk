@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 存储空间表实体。
  */
 @Data
-public class SpaceEntity {
+public class Space {
     private Long id;
     private String spaceUuid;
     private Long ownerUserId;

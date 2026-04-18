@@ -1,6 +1,6 @@
 package com.netdisk.service;
 
-import com.netdisk.pojo.entity.ResourceEntity;
+import com.netdisk.pojo.entity.Resource;
 
 /**
  * 用户资源初始化服务。
@@ -12,5 +12,5 @@ public interface UserResourceInitService {
      * @param userUuid 用户业务ID
      * @return 根目录
      */
-    ResourceEntity ensureRootFolder(String userUuid);
+    Resource ensureRootFolder(String userUuid);
 }

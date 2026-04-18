@@ -9,6 +9,14 @@ public class AppProperties {
     private long refreshTokenSeconds;
     private long verificationCodeSeconds;
     private long verificationSendIntervalSeconds;
+    /**
+     * 本地文件访问签名 URL 有效期（秒），用于预览/下载临时链接。
+     */
+    private long fileAccessTtlSeconds = 3600L;
+    /**
+     * 文件访问签名密钥；为空则回退为 jwtSecret。
+     */
+    private String fileAccessSecret;
     private final Aliyun aliyun = new Aliyun();
 
     public static class Aliyun {
@@ -52,5 +60,19 @@ public class AppProperties {
     public void setVerificationCodeSeconds(long verificationCodeSeconds) { this.verificationCodeSeconds = verificationCodeSeconds; }
     public long getVerificationSendIntervalSeconds() { return verificationSendIntervalSeconds; }
     public void setVerificationSendIntervalSeconds(long verificationSendIntervalSeconds) { this.verificationSendIntervalSeconds = verificationSendIntervalSeconds; }
+    public long getFileAccessTtlSeconds() { return fileAccessTtlSeconds; }
+    public void setFileAccessTtlSeconds(long fileAccessTtlSeconds) { this.fileAccessTtlSeconds = fileAccessTtlSeconds; }
+    public String getFileAccessSecret() { return fileAccessSecret; }
+    public void setFileAccessSecret(String fileAccessSecret) { this.fileAccessSecret = fileAccessSecret; }
     public Aliyun getAliyun() { return aliyun; }
+
+    /**
+     * 用于 HMAC 签名的密钥，未单独配置时与 JWT 密钥相同。
+     */
+    public String resolveFileAccessSecret() {
+        if (fileAccessSecret != null && !fileAccessSecret.trim().isEmpty()) {
+            return fileAccessSecret.trim();
+        }
+        return jwtSecret;
+    }
 }

@@ -16,6 +16,8 @@ mybatis:
 
 app:
   jwt-secret: ${JWT_SECRET:replace-with-strong-random-secret-at-least-32-chars}
+  file-access-ttl-seconds: ${FILE_ACCESS_TTL_SECONDS:3600}
+  # file-access-secret: ${FILE_ACCESS_SECRET:}
   access-token-seconds: 7200
   refresh-token-seconds: 604800
   verification-code-seconds: 300
