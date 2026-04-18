@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 审计日志表实体。
  */
 @Data
-public class AuditLogEntity {
+public class AuditLog {
     private Long id;
     private String eventUuid;
     private Long actorUserId;
