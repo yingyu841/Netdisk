@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.netdisk.mapper.UploadPartRepository">
+<mapper namespace="com.netdisk.mapper.UploadPartMapper">
 
     <insert id="upsert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO upload_parts (upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at)
@@ -14,7 +14,7 @@
                              uploaded_at = NOW()
     </insert>
 
-    <select id="listByUploadSessionId" resultType="com.netdisk.pojo.entity.UploadPartEntity">
+    <select id="listByUploadSessionId" resultType="com.netdisk.pojo.entity.UploadPart">
         SELECT id, upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at
         FROM upload_parts
         WHERE upload_session_id = #{uploadSessionId}
@@ -38,7 +38,7 @@
         WHERE upload_session_id = #{uploadSessionId}
     </delete>
 
-    <select id="findBySessionIdAndPartNumber" resultType="com.netdisk.pojo.entity.UploadPartEntity">
+    <select id="findBySessionIdAndPartNumber" resultType="com.netdisk.pojo.entity.UploadPart">
         SELECT id, upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at
         FROM upload_parts
         WHERE upload_session_id = #{uploadSessionId}

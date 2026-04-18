@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 完成上传请求。
  */
-public class UploadCompleteRequest {
+public class UploadCompleteRequestDTO {
     @NotNull(message = "parts必填")
     @Valid
     private List<PartItem> parts = new ArrayList<PartItem>();

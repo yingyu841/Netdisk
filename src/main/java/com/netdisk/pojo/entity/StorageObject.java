@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 存储对象表实体。
  */
 @Data
-public class StorageObjectEntity {
+public class StorageObject {
     private Long id;
     private String objectUuid;
     private String sha256;

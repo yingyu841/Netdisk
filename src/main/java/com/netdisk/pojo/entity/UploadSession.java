@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 上传会话表实体。
  */
 @Data
-public class UploadSessionEntity {
+public class UploadSession {
     private Long id;
     private String uploadUuid;
     private Long userId;

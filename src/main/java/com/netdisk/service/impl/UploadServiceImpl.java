@@ -2,18 +2,18 @@ package com.netdisk.service.impl;
 
 import com.netdisk.common.ErrorCode;
 import com.netdisk.common.exception.BizException;
-import com.netdisk.mapper.ResourceRepository;
-import com.netdisk.mapper.StorageObjectRepository;
-import com.netdisk.mapper.UploadPartRepository;
-import com.netdisk.mapper.UploadSessionRepository;
-import com.netdisk.mapper.UserRepository;
-import com.netdisk.pojo.dto.UploadCompleteRequest;
-import com.netdisk.pojo.dto.UploadInitRequest;
-import com.netdisk.pojo.entity.ResourceEntity;
-import com.netdisk.pojo.entity.StorageObjectEntity;
-import com.netdisk.pojo.entity.UploadPartEntity;
-import com.netdisk.pojo.entity.UploadSessionEntity;
-import com.netdisk.pojo.entity.UserEntity;
+import com.netdisk.mapper.ResourceMapper;
+import com.netdisk.mapper.StorageObjectMapper;
+import com.netdisk.mapper.UploadPartMapper;
+import com.netdisk.mapper.UploadSessionMapper;
+import com.netdisk.mapper.UserMapper;
+import com.netdisk.pojo.dto.UploadCompleteRequestDTO;
+import com.netdisk.pojo.dto.UploadInitRequestDTO;
+import com.netdisk.pojo.entity.Resource;
+import com.netdisk.pojo.entity.StorageObject;
+import com.netdisk.pojo.entity.UploadPart;
+import com.netdisk.pojo.entity.UploadSession;
+import com.netdisk.pojo.entity.User;
 import com.netdisk.service.UploadService;
 import com.netdisk.service.UserResourceInitService;
 import org.springframework.stereotype.Service;
@@ -41,22 +41,22 @@ import java.util.stream.Stream;
  */
 @Service
 public class UploadServiceImpl implements UploadService {
-    private final UploadSessionRepository uploadSessionRepository;
-    private final UploadPartRepository uploadPartRepository;
-    private final StorageObjectRepository storageObjectRepository;
-    private final ResourceRepository resourceRepository;
-    private final UserRepository userRepository;
+    private final UploadSessionMapper uploadSessionRepository;
+    private final UploadPartMapper uploadPartRepository;
+    private final StorageObjectMapper storageObjectRepository;
+    private final ResourceMapper resourceRepository;
+    private final UserMapper userRepository;
     private final UserResourceInitService userResourceInitService;
 
     private final Path uploadBaseDir = Paths.get("data", "local-storage", "uploads");
     private final Path objectBaseDir = Paths.get("data", "local-storage", "objects");
 
     public UploadServiceImpl(
-            UploadSessionRepository uploadSessionRepository,
-            UploadPartRepository uploadPartRepository,
-            StorageObjectRepository storageObjectRepository,
-            ResourceRepository resourceRepository,
-            UserRepository userRepository,
+            UploadSessionMapper uploadSessionRepository,
+            UploadPartMapper uploadPartRepository,
+            StorageObjectMapper storageObjectRepository,
+            ResourceMapper resourceRepository,
+            UserMapper userRepository,
             UserResourceInitService userResourceInitService) {
         this.uploadSessionRepository = uploadSessionRepository;
         this.uploadPartRepository = uploadPartRepository;
@@ -68,9 +68,9 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     @Transactional
-    public Map<String, Object> init(String userUuid, UploadInitRequest request) {
-        UserEntity user = requireUser(userUuid);
-        ResourceEntity parent = resolveParentFolder(userUuid, request.getParentId());
+    public Map<String, Object> init(String userUuid, UploadInitRequestDTO request) {
+        User user = requireUser(userUuid);
+        Resource parent = resolveParentFolder(userUuid, request.getParentId());
         if (request.getSize() == null || request.getSize().longValue() <= 0L
                 || request.getPartSize() == null || request.getPartSize().longValue() <= 0L) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "上传参数不合法");
@@ -80,7 +80,7 @@ public class UploadServiceImpl implements UploadService {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "分片数量过大");
         }
 
-        UploadSessionEntity session = new UploadSessionEntity();
+        UploadSession session = new UploadSession();
         session.setUploadUuid(UUID.randomUUID().toString());
         session.setUserId(user.getId());
         session.setSpaceId(parent.getSpaceId());
@@ -110,8 +110,8 @@ public class UploadServiceImpl implements UploadService {
     @Override
     @Transactional
     public Map<String, Object> uploadPart(String userUuid, String uploadId, Integer partNumber, InputStream stream) {
-        UserEntity user = requireUser(userUuid);
-        UploadSessionEntity session = requireSession(uploadId, user.getId());
+        User user = requireUser(userUuid);
+        UploadSession session = requireSession(uploadId, user.getId());
         assertWritable(session);
         if (partNumber == null || partNumber.intValue() < 1 || partNumber.intValue() > session.getTotalParts().intValue()) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "分片序号不合法");
@@ -131,7 +131,7 @@ public class UploadServiceImpl implements UploadService {
             throw new BizException(ErrorCode.INTERNAL, 500, "写入分片失败");
         }
 
-        UploadPartEntity part = new UploadPartEntity();
+        UploadPart part = new UploadPart();
         part.setUploadSessionId(session.getId());
         part.setPartNumber(partNumber);
         part.setPartSize(size);
@@ -150,11 +150,11 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     @Transactional
-    public Map<String, Object> complete(String userUuid, String uploadId, UploadCompleteRequest request) {
-        UserEntity user = requireUser(userUuid);
-        UploadSessionEntity session = requireSession(uploadId, user.getId());
+    public Map<String, Object> complete(String userUuid, String uploadId, UploadCompleteRequestDTO request) {
+        User user = requireUser(userUuid);
+        UploadSession session = requireSession(uploadId, user.getId());
         assertWritable(session);
-        List<UploadPartEntity> parts = uploadPartRepository.listByUploadSessionId(session.getId());
+        List<UploadPart> parts = uploadPartRepository.listByUploadSessionId(session.getId());
         if (parts.size() != session.getTotalParts().intValue()) {
             throw new BizException(ErrorCode.CONFLICT, 409, "分片未上传完成");
         }
@@ -183,7 +183,7 @@ public class UploadServiceImpl implements UploadService {
             throw new BizException(ErrorCode.CONFLICT, 409, "文件摘要校验失败");
         }
 
-        StorageObjectEntity object = storageObjectRepository.findBySha256AndSize(sha256, size);
+        StorageObject object = storageObjectRepository.findBySha256AndSize(sha256, size);
         if (object == null) {
             Path objectPath = objectPathForSha256(sha256);
             try {
@@ -195,7 +195,7 @@ public class UploadServiceImpl implements UploadService {
                 throw new BizException(ErrorCode.INTERNAL, 500, "保存对象文件失败");
             }
 
-            object = new StorageObjectEntity();
+            object = new StorageObject();
             object.setObjectUuid(UUID.randomUUID().toString());
             object.setSha256(sha256);
             object.setMd5(null);
@@ -208,12 +208,12 @@ public class UploadServiceImpl implements UploadService {
             storageObjectRepository.insert(object);
         }
 
-        ResourceEntity parent = resourceRepository.findById(session.getParentResourceId());
+        Resource parent = resourceRepository.findById(session.getParentResourceId());
         if (parent == null) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "父目录不存在");
         }
         String uniqueFilename = resolveUniqueFilename(parent.getId(), session.getFilename());
-        ResourceEntity file = new ResourceEntity();
+        Resource file = new Resource();
         file.setResourceUuid(UUID.randomUUID().toString());
         file.setSpaceId(session.getSpaceId());
         file.setParentId(parent.getId());
@@ -240,8 +240,8 @@ public class UploadServiceImpl implements UploadService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> status(String userUuid, String uploadId) {
-        UserEntity user = requireUser(userUuid);
-        UploadSessionEntity session = requireSession(uploadId, user.getId());
+        User user = requireUser(userUuid);
+        UploadSession session = requireSession(uploadId, user.getId());
         Integer uploadedParts = uploadPartRepository.countByUploadSessionId(session.getId());
         Long uploadedBytes = uploadPartRepository.sumPartSizeByUploadSessionId(session.getId());
 
@@ -261,8 +261,8 @@ public class UploadServiceImpl implements UploadService {
     @Override
     @Transactional
     public void cancel(String userUuid, String uploadId) {
-        UserEntity user = requireUser(userUuid);
-        UploadSessionEntity session = requireSession(uploadId, user.getId());
+        User user = requireUser(userUuid);
+        UploadSession session = requireSession(uploadId, user.getId());
         if (!"completed".equals(session.getStatus())) {
             uploadSessionRepository.updateStatus(session.getId(), "cancelled");
         }
@@ -270,31 +270,31 @@ public class UploadServiceImpl implements UploadService {
         cleanupUploadTemp(session.getUploadUuid(), true);
     }
 
-    private UserEntity requireUser(String userUuid) {
+    private User requireUser(String userUuid) {
         String normalizedUserUuid = trim(userUuid);
         if (normalizedUserUuid.isEmpty() || "null".equalsIgnoreCase(normalizedUserUuid)) {
             throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
         }
-        UserEntity user = userRepository.findByUserUuid(normalizedUserUuid);
+        User user = userRepository.findByUserUuid(normalizedUserUuid);
         if (user == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
         }
         return user;
     }
 
-    private ResourceEntity resolveParentFolder(String userUuid, String parentId) {
+    private Resource resolveParentFolder(String userUuid, String parentId) {
         if (trim(parentId).isEmpty()) {
             return userResourceInitService.ensureRootFolder(userUuid);
         }
-        ResourceEntity folder = resourceRepository.findFolderByResourceUuid(userUuid, trim(parentId));
+        Resource folder = resourceRepository.findFolderByResourceUuid(userUuid, trim(parentId));
         if (folder == null) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "目录不存在");
         }
         return folder;
     }
 
-    private UploadSessionEntity requireSession(String uploadId, Long userId) {
-        UploadSessionEntity session = uploadSessionRepository.findByUploadUuid(trim(uploadId));
+    private UploadSession requireSession(String uploadId, Long userId) {
+        UploadSession session = uploadSessionRepository.findByUploadUuid(trim(uploadId));
         if (session == null) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "上传会话不存在");
         }
@@ -304,7 +304,7 @@ public class UploadServiceImpl implements UploadService {
         return session;
     }
 
-    private void assertWritable(UploadSessionEntity session) {
+    private void assertWritable(UploadSession session) {
         if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new BizException(ErrorCode.CONFLICT, 409, "上传会话已过期");
         }
@@ -357,7 +357,7 @@ public class UploadServiceImpl implements UploadService {
         return sb.toString();
     }
 
-    private void validateSequential(List<UploadPartEntity> parts, int expectedParts) {
+    private void validateSequential(List<UploadPart> parts, int expectedParts) {
         if (parts.size() != expectedParts) {
             throw new BizException(ErrorCode.CONFLICT, 409, "分片未上传完整");
         }
@@ -369,15 +369,15 @@ public class UploadServiceImpl implements UploadService {
         }
     }
 
-    private void validatePartEtags(UploadCompleteRequest request, Long uploadSessionId) {
+    private void validatePartEtags(UploadCompleteRequestDTO request, Long uploadSessionId) {
         if (request == null || request.getParts() == null || request.getParts().isEmpty()) {
             return;
         }
-        for (UploadCompleteRequest.PartItem p : request.getParts()) {
+        for (UploadCompleteRequestDTO.PartItem p : request.getParts()) {
             if (p == null || p.getPartNumber() == null) {
                 continue;
             }
-            UploadPartEntity saved = uploadPartRepository.findBySessionIdAndPartNumber(uploadSessionId, p.getPartNumber());
+            UploadPart saved = uploadPartRepository.findBySessionIdAndPartNumber(uploadSessionId, p.getPartNumber());
             if (saved == null) {
                 throw new BizException(ErrorCode.CONFLICT, 409, "分片不存在");
             }

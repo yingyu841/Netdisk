@@ -1,6 +1,6 @@
 package com.netdisk.mapper;
 
-import com.netdisk.pojo.entity.UploadSessionEntity;
+import com.netdisk.pojo.entity.UploadSession;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -8,10 +8,10 @@ import org.apache.ibatis.annotations.Param;
  * 上传会话数据访问接口。
  */
 @Mapper
-public interface UploadSessionRepository {
-    int insert(UploadSessionEntity entity);
+public interface UploadSessionMapper {
+    int insert(UploadSession entity);
 
-    UploadSessionEntity findByUploadUuid(String uploadUuid);
+    UploadSession findByUploadUuid(String uploadUuid);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 

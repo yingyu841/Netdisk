@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 /**
  * 初始化上传请求。
  */
-public class UploadInitRequest {
+public class UploadInitRequestDTO {
     private String parentId;
     @NotBlank(message = "filename必填")
     private String filename;

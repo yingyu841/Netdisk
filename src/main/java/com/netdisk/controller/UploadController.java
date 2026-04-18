@@ -2,8 +2,8 @@ package com.netdisk.controller;
 
 import com.netdisk.common.web.ApiResponse;
 import com.netdisk.common.web.RequestIdFilter;
-import com.netdisk.pojo.dto.UploadCompleteRequest;
-import com.netdisk.pojo.dto.UploadInitRequest;
+import com.netdisk.pojo.dto.UploadCompleteRequestDTO;
+import com.netdisk.pojo.dto.UploadInitRequestDTO;
 import com.netdisk.service.UploadService;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +29,7 @@ public class UploadController {
      * 初始化上传会话。
      */
     @PostMapping("/init")
-    public ApiResponse<Map<String, Object>> uploadInit(@Valid @RequestBody UploadInitRequest request, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> uploadInit(@Valid @RequestBody UploadInitRequestDTO request, HttpServletRequest req) {
         String userUuid = String.valueOf(req.getAttribute("authUserId"));
         return ApiResponse.ok(uploadService.init(userUuid, request), requestId(req));
     }
@@ -52,7 +52,7 @@ public class UploadController {
     @PostMapping("/{uploadId}/complete")
     public ApiResponse<Map<String, Object>> uploadComplete(
             @PathVariable String uploadId,
-            @Valid @RequestBody UploadCompleteRequest request,
+            @Valid @RequestBody UploadCompleteRequestDTO request,
             HttpServletRequest req) {
         String userUuid = String.valueOf(req.getAttribute("authUserId"));
         return ApiResponse.ok(uploadService.complete(userUuid, uploadId, request), requestId(req));

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 上传分片表实体。
  */
 @Data
-public class UploadPartEntity {
+public class UploadPart {
     private Long id;
     private Long uploadSessionId;
     private Integer partNumber;

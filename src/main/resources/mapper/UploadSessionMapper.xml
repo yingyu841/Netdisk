@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.netdisk.mapper.UploadSessionRepository">
+<mapper namespace="com.netdisk.mapper.UploadSessionMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO upload_sessions (upload_uuid, user_id, space_id, parent_resource_id, filename, total_size, total_parts, sha256, status,
@@ -10,7 +10,7 @@
                 #{expiresAt}, #{completedAt}, NOW(), NOW())
     </insert>
 
-    <select id="findByUploadUuid" resultType="com.netdisk.pojo.entity.UploadSessionEntity">
+    <select id="findByUploadUuid" resultType="com.netdisk.pojo.entity.UploadSession">
         SELECT id, upload_uuid, user_id, space_id, parent_resource_id, filename, total_size, total_parts, sha256, status, expires_at,
                completed_at, created_at, updated_at
         FROM upload_sessions
