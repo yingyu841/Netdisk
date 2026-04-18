@@ -1,6 +1,6 @@
 package com.netdisk.mapper;
 
-import com.netdisk.pojo.entity.UserSessionEntity;
+import com.netdisk.pojo.entity.UserSession;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -9,14 +9,14 @@ import java.util.List;
  * 用户会话数据访问接口。
  */
 @Mapper
-public interface UserSessionRepository {
+public interface UserSessionMapper {
     /**
      * 新增会话。
      *
      * @param session 会话实体
      * @return 影响行数
      */
-    int insert(UserSessionEntity session);
+    int insert(UserSession session);
 
     /**
      * 根据会话ID查询有效会话。
@@ -24,7 +24,7 @@ public interface UserSessionRepository {
      * @param sessionUuid 会话业务ID
      * @return 会话实体
      */
-    UserSessionEntity findActiveBySessionUuid(String sessionUuid);
+    UserSession findActiveBySessionUuid(String sessionUuid);
 
     /**
      * 根据刷新令牌哈希查询有效会话。
@@ -32,7 +32,7 @@ public interface UserSessionRepository {
      * @param refreshTokenHash 刷新令牌哈希
      * @return 会话实体
      */
-    UserSessionEntity findActiveByRefreshTokenHash(String refreshTokenHash);
+    UserSession findActiveByRefreshTokenHash(String refreshTokenHash);
 
     /**
      * 查询用户下全部有效会话。
@@ -40,7 +40,7 @@ public interface UserSessionRepository {
      * @param userId 用户主键
      * @return 会话列表
      */
-    List<UserSessionEntity> listActiveByUserId(Long userId);
+    List<UserSession> listActiveByUserId(Long userId);
 
     /**
      * 注销指定会话。

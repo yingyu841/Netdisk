@@ -1,11 +1,11 @@
 package com.netdisk.service.impl;
 
-import com.netdisk.pojo.dto.LoginRequest;
-import com.netdisk.pojo.dto.RegisterRequest;
-import com.netdisk.pojo.entity.UserEntity;
-import com.netdisk.pojo.entity.UserSessionEntity;
-import com.netdisk.mapper.UserRepository;
-import com.netdisk.mapper.UserSessionRepository;
+import com.netdisk.pojo.dto.LoginRequestDTO;
+import com.netdisk.pojo.dto.RegisterRequestDTO;
+import com.netdisk.pojo.entity.User;
+import com.netdisk.pojo.entity.UserSession;
+import com.netdisk.mapper.UserMapper;
+import com.netdisk.mapper.UserSessionMapper;
 import com.netdisk.pojo.vo.LoginResponseVO;
 import com.netdisk.pojo.vo.SessionVO;
 import com.netdisk.pojo.vo.TokenVO;
@@ -32,15 +32,15 @@ import java.util.*;
  */
 @Service
 public class AuthServiceImpl implements AuthService {
-    private final UserRepository userRepository;
-    private final UserSessionRepository sessionRepository;
+    private final UserMapper userRepository;
+    private final UserSessionMapper sessionRepository;
     private final VerificationService verificationService;
     private final UserResourceInitService userResourceInitService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AppProperties properties;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository, VerificationService verificationService,
+    public AuthServiceImpl(UserMapper userRepository, UserSessionMapper sessionRepository, VerificationService verificationService,
                            UserResourceInitService userResourceInitService, JwtTokenProvider jwtTokenProvider, AppProperties properties) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
@@ -52,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public UserProfileVO register(RegisterRequest req) {
+    public UserProfileVO register(RegisterRequestDTO req) {
         String email = safeLower(req.getEmail());
         String mobile = trim(req.getMobile());
         boolean hasEmail = !email.isEmpty();
@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BizException(ErrorCode.VERIFICATION_WRONG, 400, "验证码错误或已过期");
         }
 
-        UserEntity user = new UserEntity();
+        User user = new User();
         user.setUserUuid("u_" + UUID.randomUUID().toString().replace("-", ""));
         user.setEmail(hasEmail ? email : null);
         user.setMobile(hasMobile ? mobile : null);
@@ -90,10 +90,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public LoginResponseVO login(LoginRequest req) {
+    public LoginResponseVO login(LoginRequestDTO req) {
         String email = safeLower(req.getEmail());
         String mobile = trim(req.getMobile());
-        UserEntity user = findUser(email, mobile);
+        User user = findUser(email, mobile);
 
         boolean hasPassword = !trim(req.getPassword()).isEmpty();
         boolean hasCode = !trim(req.getVerificationCode()).isEmpty();
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public TokenVO refresh(String refreshToken) {
         String tokenHash = sha256(trim(refreshToken));
-        UserSessionEntity session = sessionRepository.findActiveByRefreshTokenHash(tokenHash);
+        UserSession session = sessionRepository.findActiveByRefreshTokenHash(tokenHash);
         if (session == null) {
             throw new BizException(ErrorCode.SESSION_EXPIRED, 410, "刷新令牌无效或已过期");
         }
@@ -144,13 +144,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public List<SessionVO> listSessions(String userUuid) {
-        UserEntity user = userRepository.findByUserUuid(userUuid);
+        User user = userRepository.findByUserUuid(userUuid);
         if (user == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
         }
-        List<UserSessionEntity> sessions = sessionRepository.listActiveByUserId(user.getId());
+        List<UserSession> sessions = sessionRepository.listActiveByUserId(user.getId());
         List<SessionVO> out = new ArrayList<SessionVO>();
-        for (UserSessionEntity s : sessions) {
+        for (UserSession s : sessions) {
             SessionVO item = new SessionVO();
             item.setSessionId(s.getSessionUuid());
             item.setDeviceId(Optional.ofNullable(s.getDeviceId()).orElse(""));
@@ -165,7 +165,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void deleteSession(String userUuid, String sessionUuid) {
-        UserSessionEntity s = sessionRepository.findActiveBySessionUuid(sessionUuid);
+        UserSession s = sessionRepository.findActiveBySessionUuid(sessionUuid);
         if (s == null) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "会话不存在");
         }
@@ -175,11 +175,11 @@ public class AuthServiceImpl implements AuthService {
         sessionRepository.revokeBySessionUuid(sessionUuid);
     }
 
-    private LoginResponseVO issueToken(UserEntity user, String clientType, String deviceId, String deviceName) {
+    private LoginResponseVO issueToken(User user, String clientType, String deviceId, String deviceName) {
         if (!"web".equals(clientType) && !"android".equals(clientType)) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "参数错误");
         }
-        UserSessionEntity session = new UserSessionEntity();
+        UserSession session = new UserSession();
         session.setSessionUuid("s_" + UUID.randomUUID().toString().replace("-", ""));
         session.setUserId(user.getId());
         session.setUserUuid(user.getUserUuid());
@@ -201,16 +201,16 @@ public class AuthServiceImpl implements AuthService {
         return data;
     }
 
-    private UserEntity findUser(String email, String mobile) {
+    private User findUser(String email, String mobile) {
         if (!email.isEmpty() && mobile.isEmpty()) {
-            UserEntity user = userRepository.findByEmail(email);
+            User user = userRepository.findByEmail(email);
             if (user == null) {
                 throw new BizException(ErrorCode.UNAUTHORIZED, 401, "账号或密码错误");
             }
             return user;
         }
         if (!mobile.isEmpty() && email.isEmpty()) {
-            UserEntity user = userRepository.findByMobile(mobile);
+            User user = userRepository.findByMobile(mobile);
             if (user == null) {
                 throw new BizException(ErrorCode.UNAUTHORIZED, 401, "账号或密码错误");
             }

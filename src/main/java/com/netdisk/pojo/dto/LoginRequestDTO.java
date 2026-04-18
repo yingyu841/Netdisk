@@ -2,7 +2,7 @@ package com.netdisk.pojo.dto;
 
 import javax.validation.constraints.NotBlank;
 
-public class LoginRequest {
+public class LoginRequestDTO {
     private String email;
     private String mobile;
     private String password;

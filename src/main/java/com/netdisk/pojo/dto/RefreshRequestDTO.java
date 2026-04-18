@@ -2,7 +2,7 @@ package com.netdisk.pojo.dto;
 
 import javax.validation.constraints.NotBlank;
 
-public class RefreshRequest {
+public class RefreshRequestDTO {
     @NotBlank(message = "refreshToken必填")
     private String refreshToken;
 

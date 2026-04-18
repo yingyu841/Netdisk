@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 用户表实体。
  */
 @Data
-public class UserEntity {
+public class User {
     private Long id;
     private String userUuid;
     private String email;

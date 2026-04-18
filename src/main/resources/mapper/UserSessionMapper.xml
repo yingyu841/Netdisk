@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.netdisk.mapper.UserSessionRepository">
+<mapper namespace="com.netdisk.mapper.UserSessionMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user_sessions (session_uuid, user_id, device_id, device_name, client_type, refresh_token_hash, expires_at, created_at, updated_at)
         VALUES (#{sessionUuid}, #{userId}, #{deviceId}, #{deviceName}, #{clientType}, #{refreshTokenHash}, #{expiresAt}, NOW(), NOW())
     </insert>
 
-    <select id="findActiveBySessionUuid" resultType="com.netdisk.pojo.entity.UserSessionEntity">
+    <select id="findActiveBySessionUuid" resultType="com.netdisk.pojo.entity.UserSession">
         SELECT s.id,
                s.session_uuid,
                s.user_id,
@@ -27,7 +27,7 @@
         LIMIT 1
     </select>
 
-    <select id="findActiveByRefreshTokenHash" resultType="com.netdisk.pojo.entity.UserSessionEntity">
+    <select id="findActiveByRefreshTokenHash" resultType="com.netdisk.pojo.entity.UserSession">
         SELECT s.id,
                s.session_uuid,
                s.user_id,
@@ -46,7 +46,7 @@
         LIMIT 1
     </select>
 
-    <select id="listActiveByUserId" resultType="com.netdisk.pojo.entity.UserSessionEntity">
+    <select id="listActiveByUserId" resultType="com.netdisk.pojo.entity.UserSession">
         SELECT s.id,
                s.session_uuid,
                s.user_id,

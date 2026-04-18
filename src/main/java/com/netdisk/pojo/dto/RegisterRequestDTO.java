@@ -2,7 +2,7 @@ package com.netdisk.pojo.dto;
 
 import javax.validation.constraints.NotBlank;
 
-public class RegisterRequest {
+public class RegisterRequestDTO {
     private String email;
     private String mobile;
     @NotBlank(message = "verificationCode必填")

@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.netdisk.mapper.UserRepository">
+<mapper namespace="com.netdisk.mapper.UserMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO users (user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at, updated_at)
         VALUES (#{userUuid}, #{email}, #{mobile}, #{passwordHash}, #{nickname}, #{avatarUrl}, NOW(), NOW())
     </insert>
 
-    <select id="findByUserUuid" resultType="com.netdisk.pojo.entity.UserEntity">
+    <select id="findByUserUuid" resultType="com.netdisk.pojo.entity.User">
         SELECT id, user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at
         FROM users
         WHERE user_uuid = #{userUuid}
         LIMIT 1
     </select>
 
-    <select id="findByEmail" resultType="com.netdisk.pojo.entity.UserEntity">
+    <select id="findByEmail" resultType="com.netdisk.pojo.entity.User">
         SELECT id, user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at
         FROM users
         WHERE email = #{email}
         LIMIT 1
     </select>
 
-    <select id="findByMobile" resultType="com.netdisk.pojo.entity.UserEntity">
+    <select id="findByMobile" resultType="com.netdisk.pojo.entity.User">
         SELECT id, user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at
         FROM users
         WHERE mobile = #{mobile}

@@ -1,9 +1,9 @@
 package com.netdisk.controller;
 
-import com.netdisk.pojo.dto.LoginRequest;
-import com.netdisk.pojo.dto.RefreshRequest;
-import com.netdisk.pojo.dto.RegisterRequest;
-import com.netdisk.pojo.dto.SendVerificationRequest;
+import com.netdisk.pojo.dto.LoginRequestDTO;
+import com.netdisk.pojo.dto.RefreshRequestDTO;
+import com.netdisk.pojo.dto.RegisterRequestDTO;
+import com.netdisk.pojo.dto.SendVerificationRequestDTO;
 import com.netdisk.pojo.vo.LoginResponseVO;
 import com.netdisk.pojo.vo.SessionVO;
 import com.netdisk.pojo.vo.TokenVO;
@@ -36,7 +36,7 @@ public class AuthController {
      * 注册接口。
      */
     @PostMapping("/register")
-    public ApiResponse<UserProfileVO> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest req) {
+    public ApiResponse<UserProfileVO> register(@Valid @RequestBody RegisterRequestDTO request, HttpServletRequest req) {
         return ApiResponse.ok(authService.register(request), requestId(req));
     }
 
@@ -44,7 +44,7 @@ public class AuthController {
      * 发送验证码接口。
      */
     @PostMapping("/verification/send")
-    public ApiResponse<Void> sendVerification(@Valid @RequestBody SendVerificationRequest request, HttpServletRequest req) {
+    public ApiResponse<Void> sendVerification(@Valid @RequestBody SendVerificationRequestDTO request, HttpServletRequest req) {
         verificationService.send(request.getChannel(), request.getEmail(), request.getMobile());
         return ApiResponse.ok(null, requestId(req));
     }
@@ -53,7 +53,7 @@ public class AuthController {
      * 登录接口。
      */
     @PostMapping("/login")
-    public ApiResponse<LoginResponseVO> login(@Valid @RequestBody LoginRequest request, HttpServletRequest req) {
+    public ApiResponse<LoginResponseVO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest req) {
         return ApiResponse.ok(authService.login(request), requestId(req));
     }
 
@@ -61,7 +61,7 @@ public class AuthController {
      * 刷新令牌接口。
      */
     @PostMapping("/refresh")
-    public ApiResponse<TokenVO> refresh(@Valid @RequestBody RefreshRequest request, HttpServletRequest req) {
+    public ApiResponse<TokenVO> refresh(@Valid @RequestBody RefreshRequestDTO request, HttpServletRequest req) {
         return ApiResponse.ok(authService.refresh(request.getRefreshToken()), requestId(req));
     }
 

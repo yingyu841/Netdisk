@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * 用户会话表实体。
  */
 @Data
-public class UserSessionEntity {
+public class UserSession {
     private Long id;
     private String sessionUuid;
     private Long userId;

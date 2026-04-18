@@ -1,7 +1,7 @@
 package com.netdisk.service;
 
-import com.netdisk.pojo.dto.LoginRequest;
-import com.netdisk.pojo.dto.RegisterRequest;
+import com.netdisk.pojo.dto.LoginRequestDTO;
+import com.netdisk.pojo.dto.RegisterRequestDTO;
 import com.netdisk.pojo.vo.LoginResponseVO;
 import com.netdisk.pojo.vo.SessionVO;
 import com.netdisk.pojo.vo.TokenVO;
@@ -19,7 +19,7 @@ public interface AuthService {
      * @param req 注册参数
      * @return 用户资料
      */
-    UserProfileVO register(RegisterRequest req);
+    UserProfileVO register(RegisterRequestDTO req);
 
     /**
      * 用户登录（支持密码或验证码）。
@@ -27,7 +27,7 @@ public interface AuthService {
      * @param req 登录参数
      * @return 登录结果
      */
-    LoginResponseVO login(LoginRequest req);
+    LoginResponseVO login(LoginRequestDTO req);
 
     /**
      * 刷新访问令牌。

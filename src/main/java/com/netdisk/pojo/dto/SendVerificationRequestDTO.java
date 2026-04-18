@@ -2,7 +2,7 @@ package com.netdisk.pojo.dto;
 
 import javax.validation.constraints.NotBlank;
 
-public class SendVerificationRequest {
+public class SendVerificationRequestDTO {
     @NotBlank(message = "channel必填")
     private String channel;
     private String email;
