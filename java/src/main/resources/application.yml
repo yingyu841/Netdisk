@@ -1,0 +1,140 @@
+server:
+  port: ${HTTP_PORT:8081}
+
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:netdisk}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123123y}
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DB:0}
+    timeout: ${REDIS_TIMEOUT:2000ms}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.netdisk.pojo.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+
+app:
+  jwt-secret: ${JWT_SECRET:replace-with-strong-random-secret-at-least-32-chars}
+  file-access-ttl-seconds: ${FILE_ACCESS_TTL_SECONDS:3600}
+  # file-access-secret: ${FILE_ACCESS_SECRET:}
+  access-token-seconds: 7200
+  refresh-token-seconds: 604800
+  verification-code-seconds: 300
+  verification-send-interval-seconds: 60
+  slow-api-enabled: ${SLOW_API_ENABLED:true}
+  slow-api-threshold-ms: ${SLOW_API_THRESHOLD_MS:800}
+  response-cache:
+    enabled: ${API_RESPONSE_CACHE_ENABLED:true}
+    ttl-seconds: ${API_RESPONSE_CACHE_TTL_SECONDS:12}
+    index-ttl-seconds: ${API_RESPONSE_CACHE_INDEX_TTL_SECONDS:300}
+    max-body-bytes: ${API_RESPONSE_CACHE_MAX_BODY_BYTES:262144}
+    include-path-prefixes:
+      - /api/v1/resources
+      - /api/v1/me/activities
+      - /api/v1/auth/sessions
+      - /api/v1/shares
+      - /api/v2/groups
+      - /api/v2/notifications
+      - /api/v2/chat
+      - /s/
+    exclude-path-prefixes:
+      - /actuator
+    exclude-path-suffixes:
+      - /preview-url
+      - /download-url
+      - /ws-token
+    exclude-exact-paths:
+      - /api/v1/file-access
+  rate-limit:
+    enabled: ${API_RATE_LIMIT_ENABLED:true}
+    rules:
+      - key: auth:login
+        method: POST
+        path-pattern: /api/v1/auth/login
+        max-requests: 20
+        window-seconds: 60
+      - key: auth:verification_send
+        method: POST
+        path-pattern: /api/v1/auth/verification/send
+        max-requests: 10
+        window-seconds: 60
+      - key: share:verify
+        method: POST
+        path-pattern: /s/*/verify
+        max-requests: 30
+        window-seconds: 60
+  chat-mq:
+    enabled: ${CHAT_MQ_ENABLED:true}
+    exchange: ${CHAT_MQ_EXCHANGE:netdisk.chat.exchange}
+    queue: ${CHAT_MQ_QUEUE:netdisk.chat.message.sent.queue}
+    routing-key: ${CHAT_MQ_ROUTING_KEY:chat.message.sent}
+    read-batch-queue: ${CHAT_MQ_READ_BATCH_QUEUE:netdisk.chat.read.batch.queue}
+    read-batch-routing-key: ${CHAT_MQ_READ_BATCH_ROUTING_KEY:chat.read.batch}
+    retry-exchange: ${CHAT_MQ_RETRY_EXCHANGE:netdisk.chat.retry.exchange}
+    retry-queue: ${CHAT_MQ_RETRY_QUEUE:netdisk.chat.retry.queue}
+    retry-routing-key: ${CHAT_MQ_RETRY_ROUTING_KEY:#}
+    dead-exchange: ${CHAT_MQ_DEAD_EXCHANGE:netdisk.chat.dead.exchange}
+    dead-queue: ${CHAT_MQ_DEAD_QUEUE:netdisk.chat.dead.queue}
+    dead-routing-key: ${CHAT_MQ_DEAD_ROUTING_KEY:chat.dead}
+    max-retry: ${CHAT_MQ_MAX_RETRY:3}
+    retry-delay-ms: ${CHAT_MQ_RETRY_DELAY_MS:3000}
+    outbox-enabled: ${CHAT_MQ_OUTBOX_ENABLED:true}
+    outbox-batch-size: ${CHAT_MQ_OUTBOX_BATCH_SIZE:100}
+    outbox-poll-ms: ${CHAT_MQ_OUTBOX_POLL_MS:1000}
+    outbox-retry-delay-seconds: ${CHAT_MQ_OUTBOX_RETRY_DELAY_SECONDS:5}
+    outbox-cleanup-ms: ${CHAT_MQ_OUTBOX_CLEANUP_MS:3600000}
+    outbox-sent-retention-days: ${CHAT_MQ_OUTBOX_SENT_RETENTION_DAYS:7}
+    outbox-monitor-ms: ${CHAT_MQ_OUTBOX_MONITOR_MS:10000}
+    outbox-warn-pending-threshold: ${CHAT_MQ_OUTBOX_WARN_PENDING_THRESHOLD:5000}
+    outbox-warn-dead-threshold: ${CHAT_MQ_OUTBOX_WARN_DEAD_THRESHOLD:100}
+    consumer-log-cleanup-ms: ${CHAT_MQ_CONSUMER_LOG_CLEANUP_MS:3600000}
+    consumer-log-retention-days: ${CHAT_MQ_CONSUMER_LOG_RETENTION_DAYS:7}
+#  aliyun:
+#    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+#    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
+#    sms-region: ${ALIYUN_SMS_REGION:cn-hangzhou}
+#    sms-sign-name: ${ALIYUN_SMS_SIGN_NAME:}
+#    sms-template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+#    dm-region: ${ALIYUN_DM_REGION:cn-hangzhou}
+#    dm-from-address: ${ALIYUN_DM_FROM_ADDRESS:}
+#    dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
+#    dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
+  aliyun:
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
+    sms-region: ${ALIYUN_SMS_REGION:cn-hangzhou}
+    sms-sign-name: ${ALIYUN_SMS_SIGN_NAME:}
+    sms-template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+    dm-region: ${ALIYUN_DM_REGION:cn-hangzhou}
+    dm-from-address: ${ALIYUN_DM_FROM_ADDRESS:}
+    dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
+    dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never

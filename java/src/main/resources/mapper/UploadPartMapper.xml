@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.netdisk.mapper.UploadPartMapper">
+
+    <insert id="upsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO upload_parts (upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at)
+        VALUES (#{uploadSessionId}, #{partNumber}, #{partSize}, #{etag}, #{checksum}, #{status}, NOW())
+        ON DUPLICATE KEY UPDATE
+                             part_size = VALUES(part_size),
+                             etag = VALUES(etag),
+                             checksum = VALUES(checksum),
+                             status = VALUES(status),
+                             uploaded_at = NOW()
+    </insert>
+
+    <select id="listByUploadSessionId" resultType="com.netdisk.pojo.entity.UploadPart">
+        SELECT id, upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at
+        FROM upload_parts
+        WHERE upload_session_id = #{uploadSessionId}
+        ORDER BY part_number ASC
+    </select>
+
+    <select id="countByUploadSessionId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM upload_parts
+        WHERE upload_session_id = #{uploadSessionId}
+    </select>
+
+    <select id="sumPartSizeByUploadSessionId" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(part_size), 0)
+        FROM upload_parts
+        WHERE upload_session_id = #{uploadSessionId}
+    </select>
+
+    <delete id="deleteByUploadSessionId">
+        DELETE FROM upload_parts
+        WHERE upload_session_id = #{uploadSessionId}
+    </delete>
+
+    <select id="findBySessionIdAndPartNumber" resultType="com.netdisk.pojo.entity.UploadPart">
+        SELECT id, upload_session_id, part_number, part_size, etag, checksum, status, uploaded_at
+        FROM upload_parts
+        WHERE upload_session_id = #{uploadSessionId}
+          AND part_number = #{partNumber}
+        LIMIT 1
+    </select>
+
+</mapper>

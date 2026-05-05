@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.netdisk.mapper.AuditLogMapper">
+
+    <select id="countByActorUserId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM audit_logs
+        WHERE actor_user_id = #{actorUserId}
+    </select>
+
+    <select id="listByActorUserId" resultType="com.netdisk.pojo.entity.AuditLog">
+        SELECT id,
+               event_uuid,
+               actor_user_id,
+               actor_type,
+               event_type,
+               target_type,
+               target_id,
+               result,
+               reason,
+               metadata_json,
+               created_at
+        FROM audit_logs
+        WHERE actor_user_id = #{actorUserId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO audit_logs (event_uuid, actor_user_id, actor_type, event_type, target_type, target_id, result, reason,
+                                metadata_json, created_at)
+        VALUES (#{eventUuid}, #{actorUserId}, #{actorType}, #{eventType}, #{targetType}, #{targetId}, #{result}, #{reason},
+                #{metadataJson}, NOW())
+    </insert>
+
+</mapper>

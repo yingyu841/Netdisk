@@ -1,0 +1,9 @@
+*
+!.gitignore
+!java/
+!java/**
+
+# Java build artifacts
+java/target/
+java/.idea/
+java/**/*.iml

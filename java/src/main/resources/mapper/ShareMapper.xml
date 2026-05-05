@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.netdisk.mapper.ShareMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shares (share_uuid, space_id, creator_user_id, share_type, title, access_code_hash, allow_preview,
+                            allow_download, max_access_count, current_access_count, expired_at, status, revoked_at, created_at, updated_at)
+        VALUES (#{shareUuid}, #{spaceId}, #{creatorUserId}, #{shareType}, #{title}, #{accessCodeHash}, #{allowPreview},
+                #{allowDownload}, #{maxAccessCount}, #{currentAccessCount}, #{expiredAt}, #{status}, #{revokedAt}, NOW(), NOW())
+    </insert>
+
+    <select id="findByShareUuid" resultType="com.netdisk.pojo.entity.Share">
+        SELECT id, share_uuid, space_id, creator_user_id, share_type, title, access_code_hash, allow_preview, allow_download,
+               max_access_count, current_access_count, expired_at, status, revoked_at, created_at, updated_at
+        FROM shares
+        WHERE share_uuid = #{shareUuid}
+        LIMIT 1
+    </select>
+
+    <select id="countByCreatorUserId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM shares
+        WHERE creator_user_id = #{creatorUserId}
+    </select>
+
+    <select id="listByCreatorUserId" resultType="com.netdisk.pojo.entity.Share">
+        SELECT id, share_uuid, space_id, creator_user_id, share_type, title, access_code_hash, allow_preview, allow_download,
+               max_access_count, current_access_count, expired_at, status, revoked_at, created_at, updated_at
+        FROM shares
+        WHERE creator_user_id = #{creatorUserId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <update id="revokeByShareUuid">
+        UPDATE shares
+        SET status = 'revoked',
+            revoked_at = NOW(),
+            updated_at = NOW()
+        WHERE share_uuid = #{shareUuid}
+          AND creator_user_id = #{creatorUserId}
+          AND status = 'active'
+    </update>
+
+    <update id="tryConsumeAccess">
+        UPDATE shares
+        SET current_access_count = current_access_count + 1,
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND status = 'active'
+          AND (expired_at IS NULL OR expired_at > NOW())
+          AND (max_access_count IS NULL OR current_access_count &lt; max_access_count)
+    </update>
+
+</mapper>
