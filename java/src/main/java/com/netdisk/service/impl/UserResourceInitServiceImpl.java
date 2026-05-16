@@ -12,6 +12,8 @@ import com.netdisk.service.UserResourceInitService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -57,6 +59,7 @@ public class UserResourceInitServiceImpl implements UserResourceInitService {
             space.setName("个人空间");
             space.setSpaceType("personal");
             space.setStatus(1);
+            space.setQuotaBytes(1073741824L); // 默认1GB
             spaceRepository.insert(space);
         }
 
@@ -78,5 +81,31 @@ public class UserResourceInitServiceImpl implements UserResourceInitService {
 
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    @Override
+    public Map<String, Object> getPersonalSpaceUsage(String userUuid) {
+        String normalizedUserUuid = trim(userUuid);
+        if (normalizedUserUuid.isEmpty() || "null".equalsIgnoreCase(normalizedUserUuid)) {
+            throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
+        }
+
+        User user = userRepository.findByUserUuid(normalizedUserUuid);
+        if (user == null) {
+            throw new BizException(ErrorCode.UNAUTHORIZED, 401, "未授权");
+        }
+
+        Map<String, Object> usage = spaceRepository.findPersonalSpaceUsage(user.getId());
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        if (usage == null || usage.isEmpty()) {
+            result.put("usedBytes", 0L);
+            result.put("quotaBytes", 0L);
+        } else {
+            Object used = usage.get("usedBytes");
+            Object quota = usage.get("quotaBytes");
+            result.put("usedBytes", used == null ? 0L : ((Number) used).longValue());
+            result.put("quotaBytes", quota == null ? 0L : ((Number) quota).longValue());
+        }
+        return result;
     }
 }

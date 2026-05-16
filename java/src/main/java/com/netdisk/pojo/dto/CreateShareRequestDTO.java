@@ -1,16 +1,15 @@
 package com.netdisk.pojo.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 创建分享请求。
- */
 public class CreateShareRequestDTO {
     @NotEmpty(message = "resourceIds不能为空")
     private List<String> resourceIds;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expiredAt;
     private Boolean needCode;
     private String code;

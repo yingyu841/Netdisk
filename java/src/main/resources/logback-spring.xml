@@ -133,6 +133,21 @@
         <appender-ref ref="CHAT_MQ_FILE"/>
     </appender>
 
+    <!-- MyBatis / JdbcTemplate：默认 DEBUG（SQL+参数），写入 sql-debug.log + 控制台；不进 app.log（避免刷屏）。关闭：MAPPER_SQL_LOG_LEVEL=INFO -->
+    <appender name="SQL_DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/sql-debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/sql-debug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
     <logger name="biz.access" level="INFO" additivity="false">
         <appender-ref ref="ASYNC_ACCESS"/>
         <appender-ref ref="CONSOLE"/>
@@ -157,6 +172,27 @@
         <appender-ref ref="ASYNC_ERROR"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
+
+    <logger name="com.netdisk.mapper" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_DEBUG_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.jdbc.core" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_DEBUG_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- profile「sql-log」：Mapper 升为 TRACE（含结果行）；仍写入 sql-debug.log + 控制台 -->
+    <springProfile name="sql-log">
+        <logger name="com.netdisk.mapper" level="TRACE" additivity="false">
+            <appender-ref ref="SQL_DEBUG_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+        <logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE" additivity="false">
+            <appender-ref ref="SQL_DEBUG_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+    </springProfile>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

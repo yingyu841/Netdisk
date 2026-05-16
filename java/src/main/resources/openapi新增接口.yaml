@@ -1,0 +1,332 @@
+openapi: 3.0.3
+info:
+  title: Netdisk API - 新增接口
+  description: 网盘系统新增接口文档
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: 本地开发环境
+
+paths:
+  /api/v1/spaces/current/usage:
+    get:
+      tags:
+        - 空间管理
+      summary: 获取当前用户个人空间使用情况
+      description: 查询当前用户个人空间的已用空间和配额
+      operationId: getPersonalSpaceUsage
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceUsageResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/auth/password:
+    post:
+      tags:
+        - 认证管理
+      summary: 修改密码
+      description: 当前用户修改登录密码，需要验证旧密码
+      operationId: changePassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: 修改成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 参数错误（旧密码或新密码长度不足8位）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: 认证失败（旧密码错误）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/auth/profile:
+    get:
+      tags:
+        - 认证管理
+      summary: 获取个人资料
+      description: 获取当前用户的个人资料信息
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags:
+        - 认证管理
+      summary: 修改个人资料
+      description: 当前用户修改个人资料，包括昵称和头像
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: 修改成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          description: 参数错误（昵称或头像URL过长）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/resources/admin/refresh-all-folder-sizes:
+    post:
+      tags:
+        - 资源管理
+      summary: 批量刷新所有文件夹大小
+      description: 遍历系统中所有文件夹，递归计算每个文件夹下所有子项的字节数之和，用于修复历史数据
+      operationId: refreshAllFolderSizes
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      refreshed:
+                        type: integer
+                        description: 刷新的文件夹数量
+                        example: 15
+
+  /api/v2/me/invites:
+    get:
+      tags:
+        - 群组邀请
+      summary: 获取当前用户的邀请列表
+      description: 获取当前用户收到的待处理群组邀请列表（仅返回 pending 状态且未过期的邀请）
+      operationId: listMyInvites
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码，默认1
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页条数，默认20
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/InviteListResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          description: 旧密码（至少8位）
+          example: "12345678"
+        newPassword:
+          type: string
+          description: 新密码（至少8位）
+          example: "87654321"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: 昵称（最多50字符）
+          example: "小网"
+        avatarUrl:
+          type: string
+          description: 头像URL（最多500字符）
+          example: "https://example.com/avatar.jpg"
+
+    UserProfileResponse:
+      type: object
+      properties:
+        userUuid:
+          type: string
+          description: 用户UUID
+          example: "u_xxx"
+        nickname:
+          type: string
+          description: 昵称
+          example: "小网"
+        avatarUrl:
+          type: string
+          description: 头像URL
+          example: "https://example.com/avatar.jpg"
+
+    InviteListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: 总数
+          example: 2
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InviteItem'
+
+    InviteItem:
+      type: object
+      properties:
+        inviteId:
+          type: string
+          description: 邀请ID
+          example: "inv_xxx"
+        groupId:
+          type: string
+          description: 群组ID
+          example: "g_xxx"
+        groupName:
+          type: string
+          description: 群组名称
+          example: "技术交流群"
+        inviterUserId:
+          type: string
+          description: 邀请人用户ID
+          example: "u_xxx"
+        role:
+          type: string
+          description: 角色（editor/member）
+          example: "editor"
+        status:
+          type: string
+          description: 状态（pending）
+          example: "pending"
+        expiredAt:
+          type: string
+          description: 过期时间
+          example: "2026-05-08 19:00:00"
+        createdAt:
+          type: string
+          description: 创建时间
+          example: "2026-05-05 19:00:00"
+
+    SpaceUsageResponse:
+      type: object
+      properties:
+        usedBytes:
+          type: integer
+          format: int64
+          description: 已用空间（字节）
+          example: 1073741824
+        quotaBytes:
+          type: integer
+          format: int64
+          description: 配额空间（字节），为0表示未设置
+          example: 107374182400
+
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+          description: 响应数据

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.mapper.AiAgentConfigMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_agent_config (user_uuid, model_name, temperature, max_tokens, system_prompt, enabled, created_at, updated_at)
+        VALUES (#{userUuid}, #{modelName}, #{temperature}, #{maxTokens}, #{systemPrompt}, #{enabled}, NOW(), NOW())
+    </insert>
+    <select id="findByUserUuid" resultType="com.netdisk.pojo.entity.AiAgentConfig">
+        SELECT id, user_uuid, model_name, temperature, max_tokens, system_prompt, enabled, created_at, updated_at
+        FROM ai_agent_config WHERE user_uuid = #{userUuid} LIMIT 1
+    </select>
+    <update id="updateByUserUuid">
+        UPDATE ai_agent_config
+        <set>
+            <if test="modelName != null">model_name = #{modelName},</if>
+            <if test="temperature != null">temperature = #{temperature},</if>
+            <if test="maxTokens != null">max_tokens = #{maxTokens},</if>
+            <if test="systemPrompt != null">system_prompt = #{systemPrompt},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            updated_at = NOW()
+        </set>
+        WHERE user_uuid = #{userUuid}
+    </update>
+    <delete id="deleteByUserUuid">DELETE FROM ai_agent_config WHERE user_uuid = #{userUuid}</delete>
+</mapper>

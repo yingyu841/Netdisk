@@ -159,6 +159,17 @@ public class ResourceController {
     }
 
     /**
+     * 批量刷新所有文件夹的大小（用于修复历史数据）。
+     */
+    @PostMapping("/admin/refresh-all-folder-sizes")
+    public ApiResponse<Map<String, Object>> refreshAllFolderSizes(HttpServletRequest req) {
+        int count = resourceService.refreshAllFolderSizes();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("refreshed", count);
+        return ApiResponse.ok(data, requestId(req));
+    }
+
+    /**
      * 获取预览链接（本地存储：返回带签名的临时 file-access URL，便于 iframe/img 直接使用）。
      */
     @GetMapping("/{resourceId}/preview-url")

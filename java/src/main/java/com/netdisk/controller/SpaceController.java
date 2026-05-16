@@ -6,6 +6,7 @@ import com.netdisk.common.web.ApiResponse;
 import com.netdisk.common.web.RequestIdFilter;
 import com.netdisk.mapper.UserMapper;
 import com.netdisk.pojo.entity.User;
+import com.netdisk.service.UserResourceInitService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,9 +20,11 @@ import java.util.Map;
 @RestController
 public class SpaceController {
     private final UserMapper userMapper;
+    private final UserResourceInitService userResourceInitService;
 
-    public SpaceController(UserMapper userMapper) {
+    public SpaceController(UserMapper userMapper, UserResourceInitService userResourceInitService) {
         this.userMapper = userMapper;
+        this.userResourceInitService = userResourceInitService;
     }
 
     /**
@@ -40,6 +43,15 @@ public class SpaceController {
         data.put("spaceType", "personal");
         data.put("role", "owner");
         return ApiResponse.ok(data, requestId(req));
+    }
+
+    /**
+     * 获取当前用户个人空间使用情况。
+     */
+    @GetMapping("/api/v1/spaces/current/usage")
+    public ApiResponse<Map<String, Object>> currentSpaceUsage(HttpServletRequest req) {
+        String userUuid = String.valueOf(req.getAttribute("authUserId"));
+        return ApiResponse.ok(userResourceInitService.getPersonalSpaceUsage(userUuid), requestId(req));
     }
 
     private String resolveSpaceName(String nickname) {

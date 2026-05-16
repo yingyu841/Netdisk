@@ -49,6 +49,12 @@ public class VerificationServiceImpl implements VerificationService {
         String code = String.format("%06d", RANDOM.nextInt(1000000));
         codeStore.put(key, new CodeEntry(code, now.plusSeconds(properties.getVerificationCodeSeconds())));
 
+        // 开发测试模式：跳过实际发送，打印验证码到日志
+        if (properties.isDevMode()) {
+            log.info("【开发模式】验证码已生成: {} ({}:{})", code, channel, email != null ? email : mobile);
+            return;
+        }
+
         if ("email".equals(channel)) {
             sendEmail(email, code);
         } else {
@@ -69,12 +75,14 @@ public class VerificationServiceImpl implements VerificationService {
 
     private void sendSms(String mobile, String code) {
         AppProperties.Aliyun aliyun = properties.getAliyun();
-        if (isBlank(aliyun.getAccessKeyId()) || isBlank(aliyun.getAccessKeySecret()) || isBlank(aliyun.getSmsSignName()) || isBlank(aliyun.getSmsTemplateCode())) {
+        if (isBlank(aliyun.getAccessKeyId()) || isBlank(aliyun.getAccessKeySecret()) || isBlank(aliyun.getSmsSignName())
+                || isBlank(aliyun.getSmsTemplateCode())) {
             log.info("[MOCK SMS] mobile={} code={}", mobile, code);
             return;
         }
         try {
-            DefaultProfile profile = DefaultProfile.getProfile(aliyun.getSmsRegion(), aliyun.getAccessKeyId(), aliyun.getAccessKeySecret());
+            DefaultProfile profile = DefaultProfile.getProfile(aliyun.getSmsRegion(), aliyun.getAccessKeyId(),
+                    aliyun.getAccessKeySecret());
             IAcsClient client = new DefaultAcsClient(profile);
             SendSmsRequest request = new SendSmsRequest();
             request.setPhoneNumbers(mobile);
@@ -92,12 +100,14 @@ public class VerificationServiceImpl implements VerificationService {
 
     private void sendEmail(String email, String code) {
         AppProperties.Aliyun aliyun = properties.getAliyun();
-        if (isBlank(aliyun.getAccessKeyId()) || isBlank(aliyun.getAccessKeySecret()) || isBlank(aliyun.getDmFromAddress())) {
+        if (isBlank(aliyun.getAccessKeyId()) || isBlank(aliyun.getAccessKeySecret())
+                || isBlank(aliyun.getDmFromAddress())) {
             log.info("[MOCK EMAIL] email={} code={}", email, code);
             return;
         }
         try {
-            DefaultProfile profile = DefaultProfile.getProfile(aliyun.getDmRegion(), aliyun.getAccessKeyId(), aliyun.getAccessKeySecret());
+            DefaultProfile profile = DefaultProfile.getProfile(aliyun.getDmRegion(), aliyun.getAccessKeyId(),
+                    aliyun.getAccessKeySecret());
             IAcsClient client = new DefaultAcsClient(profile);
             SingleSendMailRequest request = new SingleSendMailRequest();
             request.setAccountName(aliyun.getDmFromAddress());

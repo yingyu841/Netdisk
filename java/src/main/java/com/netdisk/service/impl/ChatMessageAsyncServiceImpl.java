@@ -128,6 +128,16 @@ public class ChatMessageAsyncServiceImpl implements ChatMessageAsyncService {
                     (rs, rowNum) -> rs.getLong(1),
                     conversationId
             );
+            String luaScript =
+                    "local current = redis.call('GET', KEYS[1]) " +
+                    "if current == false then " +
+                    "  current = 0 " +
+                    "else " +
+                    "  current = tonumber(current) " +
+                    "end " +
+                    "redis.call('SET', KEYS[1], current + ARGV[1]) " +
+                    "redis.call('EXPIRE', KEYS[1], ARGV[2]) " +
+                    "return current + ARGV[1]";
             for (Long uid : memberUserIds) {
                 if (uid == null) {
                     continue;
@@ -137,8 +147,10 @@ public class ChatMessageAsyncServiceImpl implements ChatMessageAsyncService {
                     redisTemplate.opsForValue().set(key, "0", UNREAD_COUNTER_CACHE_SECONDS, TimeUnit.SECONDS);
                     continue;
                 }
-                redisTemplate.opsForValue().increment(key, 1L);
-                redisTemplate.expire(key, UNREAD_COUNTER_CACHE_SECONDS, TimeUnit.SECONDS);
+                redisTemplate.execute(
+                        new org.springframework.data.redis.core.script.DefaultRedisScript<>(luaScript, Long.class),
+                        java.util.Arrays.asList(key), "1", String.valueOf(UNREAD_COUNTER_CACHE_SECONDS)
+                );
             }
         } catch (Exception ignore) {
         }

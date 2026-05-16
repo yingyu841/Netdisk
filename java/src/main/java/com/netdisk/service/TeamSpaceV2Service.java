@@ -28,7 +28,10 @@ public interface TeamSpaceV2Service {
 
     Map<String, Object> rejectInvite(String userUuid, String inviteToken);
 
-    Map<String, Object> updateMemberRole(String userUuid, String groupId, String targetUserId, Map<String, Object> request);
+    Map<String, Object> listMyInvites(String userUuid, Integer page, Integer pageSize);
+
+    Map<String, Object> updateMemberRole(String userUuid, String groupId, String targetUserId,
+            Map<String, Object> request);
 
     Map<String, Object> removeMember(String userUuid, String groupId, String targetUserId);
 
@@ -36,7 +39,8 @@ public interface TeamSpaceV2Service {
 
     Map<String, Object> listMyJoinRequests(String userUuid, Integer page, Integer pageSize);
 
-    Map<String, Object> listGroupJoinRequests(String userUuid, String groupId, String status, Integer page, Integer pageSize);
+    Map<String, Object> listGroupJoinRequests(String userUuid, String groupId, String status, Integer page,
+            Integer pageSize);
 
     Map<String, Object> approveJoinRequest(String userUuid, String groupId, String requestId);
 
@@ -66,13 +70,16 @@ public interface TeamSpaceV2Service {
 
     Map<String, Object> initResourceVersionUpload(String userUuid, String resourceId, Map<String, Object> request);
 
-    Map<String, Object> uploadResourceVersionPart(String userUuid, String resourceId, String uploadId, Integer partNumber, InputStream stream);
+    Map<String, Object> uploadResourceVersionPart(String userUuid, String resourceId, String uploadId,
+            Integer partNumber, InputStream stream);
 
-    Map<String, Object> completeResourceVersionUpload(String userUuid, String resourceId, String uploadId, Map<String, Object> request);
+    Map<String, Object> completeResourceVersionUpload(String userUuid, String resourceId, String uploadId,
+            Map<String, Object> request);
 
     Map<String, Object> restoreResourceVersion(String userUuid, String resourceId, Integer versionNo);
 
-    Map<String, Object> getResourceVersionDownloadUrl(String userUuid, String resourceId, Integer versionNo, String requestBaseUrl);
+    Map<String, Object> getResourceVersionDownloadUrl(String userUuid, String resourceId, Integer versionNo,
+            String requestBaseUrl);
 
     Map<String, Object> createPreviewJob(String userUuid, String resourceId, Map<String, Object> request);
 

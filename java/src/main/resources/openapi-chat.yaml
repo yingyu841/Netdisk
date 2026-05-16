@@ -1,0 +1,1687 @@
+openapi: 3.0.3
+info:
+  title: Netdisk API - 聊天功能
+  description: 网盘系统聊天功能接口文档
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: 本地开发环境
+
+paths:
+  # ==================== 会话管理 ====================
+  /api/v2/chat/conversations:
+    post:
+      tags:
+        - 会话管理
+      summary: 创建会话
+      description: 创建群聊或私聊会话
+      operationId: createConversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationRequest'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+    get:
+      tags:
+        - 会话管理
+      summary: 获取会话列表
+      description: 获取当前用户的会话列表，支持分页和搜索
+      operationId: listConversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索关键字（会话名称）
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页条数
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationListResponse'
+
+  /api/v2/chat/conversations/{conversationId}:
+    get:
+      tags:
+        - 会话管理
+      summary: 获取会话详情
+      description: 获取指定会话的详细信息，包括成员列表
+      operationId: getConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetailResponse'
+
+    patch:
+      tags:
+        - 会话管理
+      summary: 更新会话
+      description: 修改会话名称或头像
+      operationId: updateConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConversationRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetailResponse'
+
+  /api/v2/chat/conversations/{conversationId}/archive:
+    post:
+      tags:
+        - 会话管理
+      summary: 归档会话
+      description: 将会话移入归档列表
+      operationId: archiveConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 归档成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveResponse'
+
+  /api/v2/chat/conversations/{conversationId}/unarchive:
+    post:
+      tags:
+        - 会话管理
+      summary: 取消归档
+      description: 恢复已归档的会话
+      operationId: unarchiveConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 恢复成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnarchiveResponse'
+
+  # ==================== 成员管理 ====================
+  /api/v2/chat/conversations/{conversationId}/members:
+    get:
+      tags:
+        - 成员管理
+      summary: 获取成员列表
+      description: 获取会话的成员列表
+      operationId: listMembers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberListResponse'
+
+    post:
+      tags:
+        - 成员管理
+      summary: 添加成员
+      description: 向群聊添加成员
+      operationId: addMembers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMembersRequest'
+      responses:
+        '200':
+          description: 添加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddMembersResponse'
+
+  /api/v2/chat/conversations/{conversationId}/members/{userId}:
+    delete:
+      tags:
+        - 成员管理
+      summary: 移除成员
+      description: 从群聊中移除指定成员（仅群主/管理员可执行）
+      operationId: removeMember
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          description: 被移除的用户UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 移除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveMemberResponse'
+
+  /api/v2/chat/conversations/{conversationId}/leave:
+    post:
+      tags:
+        - 成员管理
+      summary: 主动退群
+      description: 成员主动退出群聊（群主无法退群，需先转让或解散）
+      operationId: leaveConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 退群成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveResponse'
+        '403':
+          description: 群主无法退群
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v2/chat/conversations/{conversationId}/dissolve:
+    post:
+      tags:
+        - 成员管理
+      summary: 解散群聊
+      description: 群主/管理员解散群聊
+      operationId: dissolveConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 解散成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DissolveResponse'
+        '400':
+          description: 私聊无法解散
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: 无权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v2/chat/conversations/{conversationId}/transfer:
+    post:
+      tags:
+        - 成员管理
+      summary: 转让群主
+      description: 群主将群主身份转让给其他成员
+      operationId: transferOwnership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferOwnershipRequest'
+      responses:
+        '200':
+          description: 转让成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferOwnershipResponse'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: 无权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v2/chat/conversations/{conversationId}/admins:
+    post:
+      tags:
+        - 成员管理
+      summary: 设置管理员
+      description: 群主/管理员将成员设置为管理员
+      operationId: setAdmin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAdminRequest'
+      responses:
+        '200':
+          description: 设置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetAdminResponse'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v2/chat/conversations/{conversationId}/admins/{userId}:
+    delete:
+      tags:
+        - 成员管理
+      summary: 取消管理员
+      description: 群主/管理员取消成员的管理员身份
+      operationId: removeAdmin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          description: 被取消管理员的用户UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveAdminResponse'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # ==================== 免打扰 ====================
+  /api/v2/chat/conversations/{conversationId}/mute:
+    post:
+      tags:
+        - 免打扰
+      summary: 设置免打扰
+      description: 设置会话免打扰
+      operationId: muteConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MuteRequest'
+      responses:
+        '200':
+          description: 设置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
+
+  /api/v2/chat/conversations/{conversationId}/unmute:
+    post:
+      tags:
+        - 免打扰
+      summary: 取消免打扰
+      description: 取消会话免打扰
+      operationId: unmuteConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnmuteResponse'
+
+  # ==================== 消息管理 ====================
+  /api/v2/chat/conversations/{conversationId}/messages:
+    post:
+      tags:
+        - 消息管理
+      summary: 发送消息
+      description: 在会话中发送消息
+      operationId: sendMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+    get:
+      tags:
+        - 消息管理
+      summary: 获取消息历史
+      description: 获取会话的消息历史（游标分页）
+      operationId: listMessages
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          description: 游标（上一页最后一条消息的ID）
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 每页条数（1-100）
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageListResponse'
+
+  /api/v2/chat/messages/{messageId}:
+    patch:
+      tags:
+        - 消息管理
+      summary: 编辑消息
+      description: 修改消息内容
+      operationId: editMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: 消息UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMessageRequest'
+      responses:
+        '200':
+          description: 编辑成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+    delete:
+      tags:
+        - 消息管理
+      summary: 撤回消息
+      description: 撤回发送的消息（仅支持2分钟内的消息撤回）
+      operationId: recallMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: 消息UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 撤回成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecallResponse'
+
+  /api/v2/chat/messages/{messageId}/read:
+    post:
+      tags:
+        - 消息管理
+      summary: 标记已读
+      description: 将单条消息标记为已读
+      operationId: markRead
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: 消息UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 标记成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkReadResponse'
+
+  /api/v2/chat/messages/read-batch:
+    post:
+      tags:
+        - 消息管理
+      summary: 批量已读
+      description: 异步批量标记消息为已读
+      operationId: markReadBatch
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadBatchRequest'
+      responses:
+        '200':
+          description: 提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadBatchResponse'
+
+  # ==================== 未读数 ====================
+  /api/v2/chat/conversations/{conversationId}/unread:
+    get:
+      tags:
+        - 未读数
+      summary: 获取未读数
+      description: 获取指定会话的未读消息数
+      operationId: unreadCount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCountResponse'
+
+  # ==================== 置顶消息 ====================
+  /api/v2/chat/conversations/{conversationId}/pins:
+    get:
+      tags:
+        - 置顶消息
+      summary: 获取置顶列表
+      description: 获取会话的置顶消息列表
+      operationId: listPins
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PinListResponse'
+
+    post:
+      tags:
+        - 置顶消息
+      summary: 置顶消息
+      description: 将消息置顶
+      operationId: pinMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinMessageRequest'
+      responses:
+        '200':
+          description: 置顶成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PinResponse'
+
+  /api/v2/chat/conversations/{conversationId}/pins/{messageId}:
+    delete:
+      tags:
+        - 置顶消息
+      summary: 取消置顶
+      description: 取消消息置顶
+      operationId: unpinMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: messageId
+          in: path
+          required: true
+          description: 消息UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnpinResponse'
+
+  # ==================== WebSocket ====================
+  /api/v2/chat/ws-token:
+    get:
+      tags:
+        - WebSocket
+      summary: 获取WebSocket令牌
+      description: 获取WebSocket连接所需的令牌
+      operationId: wsToken
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WsTokenResponse'
+
+  # ==================== 群聊邀请 ====================
+  /api/v2/chat/conversations/{conversationId}/invites:
+    post:
+      tags:
+        - 群聊邀请
+      summary: 创建邀请
+      description: 群主或管理员邀请用户加入群聊
+      operationId: createInvite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInviteRequest'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInviteResponse'
+        '400':
+          description: 参数错误
+        '403':
+          description: 无权限
+
+    get:
+      tags:
+        - 群聊邀请
+      summary: 获取邀请列表
+      description: 获取群聊的邀请记录列表
+      operationId: listInvites
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: 会话UUID
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 筛选状态（pending/accepted/rejected/expired/cancelled）
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页条数
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteListResponse'
+
+  /api/v2/chat/invites/{inviteId}:
+    get:
+      tags:
+        - 群聊邀请
+      summary: 获取邀请详情
+      description: 获取指定邀请的详细信息
+      operationId: getInvite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          description: 邀请UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteDetailResponse'
+
+    delete:
+      tags:
+        - 群聊邀请
+      summary: 取消邀请
+      description: 取消一个待处理的邀请（仅邀请人可操作）
+      operationId: cancelInvite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          description: 邀请UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelInviteResponse'
+
+  /api/v2/chat/invites/{inviteToken}/accept:
+    post:
+      tags:
+        - 群聊邀请
+      summary: 接受邀请
+      description: 通过邀请Token接受邀请加入群聊
+      operationId: acceptInvite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: inviteToken
+          in: path
+          required: true
+          description: 邀请Token
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 接受成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptInviteResponse'
+        '400':
+          description: 邀请已失效或已过期
+        '403':
+          description: 无权接受此邀请
+
+  /api/v2/chat/invites/{inviteId}/reject:
+    post:
+      tags:
+        - 群聊邀请
+      summary: 拒绝邀请
+      description: 拒绝一个收到的邀请
+      operationId: rejectInvite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          description: 邀请UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 拒绝成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RejectInviteResponse'
+
+  /api/v2/chat/invites/received:
+    get:
+      tags:
+        - 群聊邀请
+      summary: 获取收到的邀请列表
+      description: 获取当前用户收到的邀请列表
+      operationId: listReceivedInvites
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: 筛选状态（pending/accepted/rejected/expired/cancelled）
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页条数
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivedInviteListResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================== 通用 ====================
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+          description: 响应数据
+
+    # ==================== 请求模型 ====================
+    CreateConversationRequest:
+      type: object
+      required:
+        - conversationType
+        - memberUserIds
+      properties:
+        conversationType:
+          type: string
+          enum: [group, direct]
+          description: 会话类型（group=群聊，direct=私聊）
+          example: "group"
+        spaceId:
+          type: string
+          description: 关联空间ID（可选）
+          example: "space_xxx"
+        name:
+          type: string
+          description: 群聊名称（最大128字符）
+          example: "技术交流群"
+        avatarUrl:
+          type: string
+          description: 群头像URL
+          example: "https://xxx.com/avatar.jpg"
+        memberUserIds:
+          type: array
+          description: 成员用户UUID列表（群聊上限500人，超出部分返回failedMembers）
+          items:
+            type: string
+          example: ["user_uuid_1", "user_uuid_2"]
+
+    UpdateConversationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 会话名称
+          example: "新群名"
+        avatarUrl:
+          type: string
+          description: 头像URL
+          example: "https://xxx.com/new_avatar.jpg"
+
+    AddMembersRequest:
+      type: object
+      required:
+        - userIds
+      properties:
+        userIds:
+          type: array
+          description: 要添加的用户UUID列表
+          items:
+            type: string
+          example: ["user_uuid_3", "user_uuid_4"]
+
+    TransferOwnershipRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          description: 目标用户UUID
+          example: "user_uuid_new_owner"
+
+    SetAdminRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          description: 目标用户UUID
+          example: "user_uuid_admin"
+
+    MuteRequest:
+      type: object
+      properties:
+        muteUntil:
+          type: string
+          description: 免打扰截止时间（可选，格式：yyyy-MM-dd HH:mm:ss）
+          example: "2026-12-31 23:59:59"
+
+    SendMessageRequest:
+      type: object
+      required:
+        - messageType
+      properties:
+        messageType:
+          type: string
+          enum: [text, image, file, system]
+          description: 消息类型
+          example: "text"
+        contentText:
+          type: string
+          description: 文本内容
+          example: "你好"
+        content:
+          type: object
+          description: 扩展内容（JSON对象，如图片尺寸、文件元数据等）
+          example: {"width": 100, "height": 100}
+        replyToMessageId:
+          type: string
+          description: 回复的消息UUID
+          example: "msg_xxx"
+        resourceId:
+          type: integer
+          description: 关联的网盘资源ID
+          example: 123
+        clientMessageId:
+          type: string
+          description: 客户端消息ID（用于去重）
+          example: "client_msg_xxx"
+
+    EditMessageRequest:
+      type: object
+      required:
+        - contentText
+      properties:
+        contentText:
+          type: string
+          description: 新的文本内容
+          example: "修改后的内容"
+
+    ReadBatchRequest:
+      type: object
+      required:
+        - conversationId
+        - messageIds
+      properties:
+        conversationId:
+          type: string
+          description: 会话UUID
+          example: "conv_xxx"
+        messageIds:
+          type: array
+          description: 消息UUID列表
+          items:
+            type: string
+          example: ["msg_1", "msg_2"]
+
+    PinMessageRequest:
+      type: object
+      required:
+        - messageId
+      properties:
+        messageId:
+          type: string
+          description: 消息UUID
+          example: "msg_xxx"
+
+    # ==================== 响应模型 ====================
+    ConversationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 会话UUID
+        conversationType:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        status:
+          type: string
+        ownerUserId:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberInfo'
+
+    ConversationListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationSummary'
+
+    ConversationDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationType:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        status:
+          type: string
+        spaceId:
+          type: integer
+        ownerUserId:
+          type: string
+        isMuted:
+          type: boolean
+        muteUntil:
+          type: string
+        lastMessageAt:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberInfo'
+
+    ConversationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationType:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        status:
+          type: string
+        lastMessageAt:
+          type: string
+        isMuted:
+          type: boolean
+        muteUntil:
+          type: string
+        unreadCount:
+          type: integer
+        lastMessage:
+          type: object
+
+    MemberInfo:
+      type: object
+      properties:
+        userId:
+          type: string
+        nickname:
+          type: string
+        avatarUrl:
+          type: string
+        role:
+          type: string
+        joinedAt:
+          type: string
+
+    MemberListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberInfo'
+
+    ArchiveResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        archived:
+          type: boolean
+
+    UnarchiveResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        unarchived:
+          type: boolean
+
+    AddMembersResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        addedCount:
+          type: integer
+        failedUsers:
+          type: array
+          items:
+            type: string
+          description: 添加失败的成员列表及原因
+
+    RemoveMemberResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        removedUserId:
+          type: string
+        removed:
+          type: boolean
+
+    LeaveResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        left:
+          type: boolean
+
+    DissolveResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        dissolved:
+          type: boolean
+
+    TransferOwnershipResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        newOwnerUserId:
+          type: string
+        transferred:
+          type: boolean
+
+    SetAdminResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        userId:
+          type: string
+        role:
+          type: string
+        set:
+          type: boolean
+
+    RemoveAdminResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        userId:
+          type: string
+        role:
+          type: string
+        removed:
+          type: boolean
+
+    MuteResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        isMuted:
+          type: boolean
+        muteUntil:
+          type: string
+
+    UnmuteResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        isMuted:
+          type: boolean
+
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        messageType:
+          type: string
+        contentText:
+          type: string
+        content:
+          type: object
+        status:
+          type: string
+        clientMessageId:
+          type: string
+        replyToMessageId:
+          type: integer
+        resourceId:
+          type: integer
+        editedAt:
+          type: string
+        createdAt:
+          type: string
+        sender:
+          type: object
+
+    MessageListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageResponse'
+        nextCursor:
+          type: string
+
+    RecallResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+        recalled:
+          type: boolean
+
+    MarkReadResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+        read:
+          type: boolean
+
+    ReadBatchResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        readCount:
+          type: integer
+        async:
+          type: boolean
+
+    UnreadCountResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        unreadCount:
+          type: integer
+
+    PinListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              pinnedAt:
+                type: string
+              message:
+                $ref: '#/components/schemas/MessageResponse'
+
+    PinResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        messageId:
+          type: string
+        pinned:
+          type: boolean
+
+    UnpinResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        messageId:
+          type: string
+        pinned:
+          type: boolean
+
+    WsTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: WebSocket连接令牌
+        expiresIn:
+          type: integer
+          description: 过期时间（秒）
+
+    # ==================== 群聊邀请相关 ====================
+    CreateInviteRequest:
+      type: object
+      description: 创建邀请请求
+      properties:
+        userId:
+          type: string
+          description: 被邀请用户UUID（与email/phone二选一）
+          example: "user_uuid_xxx"
+        email:
+          type: string
+          description: 被邀请人邮箱（与userId/phone二选一）
+          example: "invitee@example.com"
+        phone:
+          type: string
+          description: 被邀请人手机号（与userId/email二选一）
+          example: "13800138000"
+
+    CreateInviteResponse:
+      type: object
+      properties:
+        inviteId:
+          type: string
+          description: 邀请UUID
+          example: "invite_uuid_xxx"
+        inviteToken:
+          type: string
+          description: 邀请Token（用于分享）
+          example: "abc123def456"
+        expiresAt:
+          type: string
+          format: date-time
+          description: 过期时间
+        inviteeUserId:
+          type: string
+          description: 被邀请用户UUID
+        inviteeEmail:
+          type: string
+          description: 被邀请人邮箱
+        inviteePhone:
+          type: string
+          description: 被邀请人手机号
+
+    InviteListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InviteDetailResponse'
+        page:
+          type: integer
+          description: 当前页码
+        pageSize:
+          type: integer
+          description: 每页条数
+
+    InviteDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 邀请记录ID
+        inviteUuid:
+          type: string
+          description: 邀请UUID
+        conversationId:
+          type: string
+          description: 会话UUID
+        inviterUserId:
+          type: string
+          description: 邀请人用户UUID
+        inviterNickname:
+          type: string
+          description: 邀请人昵称
+        inviteeUserId:
+          type: string
+          description: 被邀请用户UUID
+        inviteeEmail:
+          type: string
+          description: 被邀请人邮箱
+        inviteePhone:
+          type: string
+          description: 被邀请人手机号
+        inviteToken:
+          type: string
+          description: 邀请Token
+        status:
+          type: string
+          enum: [pending, accepted, rejected, expired, cancelled]
+          description: 邀请状态
+        expiresAt:
+          type: string
+          format: date-time
+          description: 过期时间
+        acceptedAt:
+          type: string
+          format: date-time
+          description: 接受时间
+        rejectedAt:
+          type: string
+          format: date-time
+          description: 拒绝时间
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+
+    ReceivedInviteListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceivedInviteItem'
+        page:
+          type: integer
+          description: 当前页码
+        pageSize:
+          type: integer
+          description: 每页条数
+
+    ReceivedInviteItem:
+      type: object
+      properties:
+        inviteUuid:
+          type: string
+          description: 邀请UUID
+        conversationUuid:
+          type: string
+          description: 会话UUID
+        conversationName:
+          type: string
+          description: 会话名称
+        inviterUserId:
+          type: string
+          description: 邀请人用户UUID
+        inviterNickname:
+          type: string
+          description: 邀请人昵称
+        status:
+          type: string
+          enum: [pending, accepted, rejected, expired, cancelled]
+          description: 邀请状态
+        expiresAt:
+          type: string
+          format: date-time
+          description: 过期时间
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+
+    AcceptInviteResponse:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+          description: 是否接受成功
+        conversationId:
+          type: string
+          description: 会话UUID
+
+    RejectInviteResponse:
+      type: object
+      properties:
+        rejected:
+          type: boolean
+          description: 是否拒绝成功
+
+    CancelInviteResponse:
+      type: object
+      properties:
+        cancelled:
+          type: boolean
+          description: 是否取消成功

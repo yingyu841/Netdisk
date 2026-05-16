@@ -46,7 +46,8 @@ public class ChatController {
     }
 
     @GetMapping("/conversations/{conversationId}")
-    public ApiResponse<Map<String, Object>> getConversation(@PathVariable String conversationId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> getConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
         return ApiResponse.ok(chatService.getConversation(currentUser(req), conversationId), requestId(req));
     }
 
@@ -55,11 +56,13 @@ public class ChatController {
             @PathVariable String conversationId,
             @RequestBody(required = false) @Valid UpdateConversationRequestDTO request,
             HttpServletRequest req) {
-        return ApiResponse.ok(chatService.updateConversation(currentUser(req), conversationId, toMap(request)), requestId(req));
+        return ApiResponse.ok(chatService.updateConversation(currentUser(req), conversationId, toMap(request)),
+                requestId(req));
     }
 
     @PostMapping("/conversations/{conversationId}/archive")
-    public ApiResponse<Map<String, Object>> archiveConversation(@PathVariable String conversationId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> archiveConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
         return ApiResponse.ok(chatService.archiveConversation(currentUser(req), conversationId), requestId(req));
     }
 
@@ -69,7 +72,8 @@ public class ChatController {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(chatService.listMembers(currentUser(req), conversationId, page, pageSize), requestId(req));
+        return ApiResponse.ok(chatService.listMembers(currentUser(req), conversationId, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/conversations/{conversationId}/members")
@@ -93,11 +97,13 @@ public class ChatController {
             @PathVariable String conversationId,
             @RequestBody(required = false) @Valid MuteConversationRequestDTO request,
             HttpServletRequest req) {
-        return ApiResponse.ok(chatService.muteConversation(currentUser(req), conversationId, toMap(request)), requestId(req));
+        return ApiResponse.ok(chatService.muteConversation(currentUser(req), conversationId, toMap(request)),
+                requestId(req));
     }
 
     @PostMapping("/conversations/{conversationId}/unmute")
-    public ApiResponse<Map<String, Object>> unmuteConversation(@PathVariable String conversationId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> unmuteConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
         return ApiResponse.ok(chatService.unmuteConversation(currentUser(req), conversationId), requestId(req));
     }
 
@@ -106,7 +112,8 @@ public class ChatController {
             @PathVariable String conversationId,
             @Valid @RequestBody SendMessageRequestDTO request,
             HttpServletRequest req) {
-        return ApiResponse.ok(chatService.sendMessage(currentUser(req), conversationId, toMap(request)), requestId(req));
+        return ApiResponse.ok(chatService.sendMessage(currentUser(req), conversationId, toMap(request)),
+                requestId(req));
     }
 
     @GetMapping("/conversations/{conversationId}/messages")
@@ -115,7 +122,8 @@ public class ChatController {
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false, defaultValue = "30") Integer limit,
             HttpServletRequest req) {
-        return ApiResponse.ok(chatService.listMessages(currentUser(req), conversationId, cursor, limit), requestId(req));
+        return ApiResponse.ok(chatService.listMessages(currentUser(req), conversationId, cursor, limit),
+                requestId(req));
     }
 
     @PatchMapping("/messages/{messageId}")
@@ -174,6 +182,111 @@ public class ChatController {
         return ApiResponse.ok(chatService.wsToken(currentUser(req)), requestId(req));
     }
 
+    @PostMapping("/conversations/{conversationId}/leave")
+    public ApiResponse<Map<String, Object>> leaveConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.leaveConversation(currentUser(req), conversationId), requestId(req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/dissolve")
+    public ApiResponse<Map<String, Object>> dissolveConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.dissolveConversation(currentUser(req), conversationId), requestId(req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/transfer")
+    public ApiResponse<Map<String, Object>> transferOwnership(
+            @PathVariable String conversationId,
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.transferOwnership(currentUser(req), conversationId, request), requestId(req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/admins")
+    public ApiResponse<Map<String, Object>> setAdmin(
+            @PathVariable String conversationId,
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.setAdmin(currentUser(req), conversationId, request), requestId(req));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/admins/{userId}")
+    public ApiResponse<Map<String, Object>> removeAdmin(
+            @PathVariable String conversationId,
+            @PathVariable("userId") String userId,
+            HttpServletRequest req) {
+        Map<String, Object> request = new LinkedHashMap<String, Object>();
+        request.put("userId", userId);
+        return ApiResponse.ok(chatService.removeAdmin(currentUser(req), conversationId, request), requestId(req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/unarchive")
+    public ApiResponse<Map<String, Object>> unarchiveConversation(@PathVariable String conversationId,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.unarchiveConversation(currentUser(req), conversationId), requestId(req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/announcement")
+    public ApiResponse<Map<String, Object>> setAnnouncement(@PathVariable String conversationId,
+            @RequestBody Map<String, Object> request, HttpServletRequest req) {
+        return ApiResponse.ok(chatService.setAnnouncement(currentUser(req), conversationId, request), requestId(req));
+    }
+
+    @GetMapping("/conversations/{conversationId}/announcement")
+    public ApiResponse<Map<String, Object>> getAnnouncement(@PathVariable String conversationId,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.getAnnouncement(currentUser(req), conversationId), requestId(req));
+    }
+
+    // ==================== 群聊邀请接口 ====================
+
+    @PostMapping("/conversations/{conversationId}/invites")
+    public ApiResponse<Map<String, Object>> createInvite(
+            @PathVariable String conversationId,
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.createInvite(currentUser(req), conversationId, request), requestId(req));
+    }
+
+    @GetMapping("/conversations/{conversationId}/invites")
+    public ApiResponse<Map<String, Object>> listInvites(
+            @PathVariable String conversationId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.listInvites(currentUser(req), conversationId, status, page, pageSize), requestId(req));
+    }
+
+    @GetMapping("/invites/{inviteId}")
+    public ApiResponse<Map<String, Object>> getInvite(@PathVariable String inviteId, HttpServletRequest req) {
+        return ApiResponse.ok(chatService.getInvite(currentUser(req), inviteId), requestId(req));
+    }
+
+    @PostMapping("/invites/{inviteToken}/accept")
+    public ApiResponse<Map<String, Object>> acceptInvite(@PathVariable String inviteToken, HttpServletRequest req) {
+        return ApiResponse.ok(chatService.acceptInvite(currentUser(req), inviteToken), requestId(req));
+    }
+
+    @PostMapping("/invites/{inviteId}/reject")
+    public ApiResponse<Map<String, Object>> rejectInvite(@PathVariable String inviteId, HttpServletRequest req) {
+        return ApiResponse.ok(chatService.rejectInvite(currentUser(req), inviteId), requestId(req));
+    }
+
+    @DeleteMapping("/invites/{inviteId}")
+    public ApiResponse<Map<String, Object>> cancelInvite(@PathVariable String inviteId, HttpServletRequest req) {
+        return ApiResponse.ok(chatService.cancelInvite(currentUser(req), inviteId), requestId(req));
+    }
+
+    @GetMapping("/invites/received")
+    public ApiResponse<Map<String, Object>> listReceivedInvites(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+            HttpServletRequest req) {
+        return ApiResponse.ok(chatService.listReceivedInvites(currentUser(req), status, page, pageSize), requestId(req));
+    }
+
     private Map<String, Object> toMap(CreateConversationRequestDTO request) {
         Map<String, Object> body = new LinkedHashMap<String, Object>();
         body.put("conversationType", request.getConversationType());
@@ -201,6 +314,8 @@ public class ChatController {
     private Map<String, Object> toMap(AddMembersRequestDTO request) {
         Map<String, Object> body = new LinkedHashMap<String, Object>();
         body.put("userIds", copyList(request.getUserIds()));
+        body.put("emails", copyList(request.getEmails()));
+        body.put("phones", copyList(request.getPhones()));
         return body;
     }
 

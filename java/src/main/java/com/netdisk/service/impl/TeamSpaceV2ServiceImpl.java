@@ -65,18 +65,18 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         String groupUuid = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO spaces (space_uuid, owner_user_id, name, space_type, status, visibility, description, quota_bytes, used_bytes, max_members, is_archived, created_at, updated_at) " +
+                "INSERT INTO spaces (space_uuid, owner_user_id, name, space_type, status, visibility, description, quota_bytes, used_bytes, max_members, is_archived, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, 'team', 1, ?, ?, ?, 0, 200, 0, NOW(), NOW())",
-                groupUuid, user.getId(), name, visibility, emptyToNull(description), quotaBytes
-        );
+                groupUuid, user.getId(), name, visibility, emptyToNull(description), quotaBytes);
 
         Long spaceId = jdbcTemplate.queryForObject("SELECT id FROM spaces WHERE space_uuid = ?", Long.class, groupUuid);
         jdbcTemplate.update(
-                "INSERT INTO space_members (space_id, user_id, role_code, status, joined_at, invited_at, created_at, updated_at) " +
+                "INSERT INTO space_members (space_id, user_id, role_code, status, joined_at, invited_at, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, 'owner', 1, NOW(), NOW(), NOW(), NOW()) " +
                         "ON DUPLICATE KEY UPDATE role_code = 'owner', status = 1, updated_at = NOW()",
-                spaceId, user.getId()
-        );
+                spaceId, user.getId());
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", groupUuid);
@@ -105,19 +105,18 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = ? AND sm.status = 1 " +
                         "WHERE s.space_type = 'team' AND s.status = 1 AND s.is_archived = 0 " +
                         "AND (? IS NULL OR s.name LIKE ?)",
-                Long.class, user.getId(), kw, kw
-        );
+                Long.class, user.getId(), kw, kw);
 
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT s.id, s.space_uuid, s.name, s.visibility, s.used_bytes, s.quota_bytes, s.created_at, sm.role_code " +
+                "SELECT s.id, s.space_uuid, s.name, s.visibility, s.used_bytes, s.quota_bytes, s.created_at, sm.role_code "
+                        +
                         "FROM spaces s " +
                         "JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = ? AND sm.status = 1 " +
                         "WHERE s.space_type = 'team' AND s.status = 1 AND s.is_archived = 0 " +
                         "AND (? IS NULL OR s.name LIKE ?) " +
                         "ORDER BY s.created_at DESC, s.id DESC LIMIT ?, ?",
                 mapRowMapper(),
-                user.getId(), kw, kw, offset, size
-        );
+                user.getId(), kw, kw, offset, size);
 
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
@@ -125,8 +124,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
             Long memberCount = jdbcTemplate.queryForObject(
                     "SELECT COUNT(1) FROM space_members WHERE space_id = ? AND status = 1",
                     Long.class,
-                    sid
-            );
+                    sid);
             Map<String, Object> item = new LinkedHashMap<String, Object>();
             item.put("id", str(row.get("space_uuid")));
             item.put("name", str(row.get("name")));
@@ -226,7 +224,9 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
             throw new BizException(ErrorCode.FORBIDDEN, 403, "仅群主可解散群组");
         }
         Long gid = longObj(group.get("id"));
-        jdbcTemplate.update("UPDATE space_members SET status = 2, removed_at = NOW(), updated_at = NOW() WHERE space_id = ? AND status = 1", gid);
+        jdbcTemplate.update(
+                "UPDATE space_members SET status = 2, removed_at = NOW(), updated_at = NOW() WHERE space_id = ? AND status = 1",
+                gid);
         jdbcTemplate.update("UPDATE spaces SET status = 2, is_archived = 1, updated_at = NOW() WHERE id = ?", gid);
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", group.get("space_uuid"));
@@ -236,7 +236,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> listMembers(String userUuid, String groupId, String keyword, Integer page, Integer pageSize) {
+    public Map<String, Object> listMembers(String userUuid, String groupId, String keyword, Integer page,
+            Integer pageSize) {
         User user = requireUser(userUuid);
         Map<String, Object> group = requireGroupAndMembership(groupId, user.getId());
         Long gid = longObj(group.get("id"));
@@ -251,8 +252,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "JOIN users u ON u.id = sm.user_id " +
                         "WHERE sm.space_id = ? AND sm.status = 1 " +
                         "AND (? IS NULL OR u.nickname LIKE ? OR u.email LIKE ?)",
-                Long.class, gid, kw, kw, kw
-        );
+                Long.class, gid, kw, kw, kw);
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT u.user_uuid, u.nickname, u.email, u.avatar_url, sm.role_code, sm.status, sm.joined_at " +
                         "FROM space_members sm " +
@@ -260,8 +260,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "WHERE sm.space_id = ? AND sm.status = 1 " +
                         "AND (? IS NULL OR u.nickname LIKE ? OR u.email LIKE ?) " +
                         "ORDER BY sm.joined_at ASC, sm.id ASC LIMIT ?, ?",
-                mapRowMapper(), gid, kw, kw, kw, offset, size
-        );
+                mapRowMapper(), gid, kw, kw, kw, offset, size);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -270,7 +269,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
             item.put("email", str(row.get("email")));
             item.put("avatarUrl", str(row.get("avatar_url")));
             item.put("role", str(row.get("role_code")));
-            item.put("status", intObj(row.get("status")) != null && intObj(row.get("status")) == 1 ? "active" : "removed");
+            item.put("status",
+                    intObj(row.get("status")) != null && intObj(row.get("status")) == 1 ? "active" : "removed");
             item.put("joinedAt", dt(row.get("joined_at")));
             items.add(item);
         }
@@ -308,8 +308,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
             inviteeId = invitee.getId();
             Integer exists = jdbcTemplate.queryForObject(
                     "SELECT COUNT(1) FROM space_members WHERE space_id = ? AND user_id = ? AND status = 1",
-                    Integer.class, gid, inviteeId
-            );
+                    Integer.class, gid, inviteeId);
             if (exists != null && exists.intValue() > 0) {
                 throw new BizException(ErrorCode.CONFLICT, 409, "该用户已是群成员");
             }
@@ -318,16 +317,16 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         String token = UUID.randomUUID().toString().replace("-", "");
         String inviteUuid = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO space_invites (invite_uuid, space_id, inviter_user_id, invitee_user_id, invitee_email, role_code, token_hash, status, expired_at, created_at, updated_at) " +
+                "INSERT INTO space_invites (invite_uuid, space_id, inviter_user_id, invitee_user_id, invitee_email, role_code, token_hash, status, expired_at, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', DATE_ADD(NOW(), INTERVAL ? HOUR), NOW(), NOW())",
-                inviteUuid, gid, user.getId(), inviteeId, emptyToNull(inviteeEmail), role, sha256Hex(token), expireHours
-        );
+                inviteUuid, gid, user.getId(), inviteeId, emptyToNull(inviteeEmail), role, sha256Hex(token),
+                expireHours);
 
         String expiredAt = jdbcTemplate.queryForObject(
                 "SELECT DATE_FORMAT(expired_at, '%Y-%m-%d %H:%i:%s') FROM space_invites WHERE invite_uuid = ?",
                 String.class,
-                inviteUuid
-        );
+                inviteUuid);
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("inviteId", inviteUuid);
@@ -338,7 +337,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> listInvites(String userUuid, String groupId, String status, Integer page, Integer pageSize) {
+    public Map<String, Object> listInvites(String userUuid, String groupId, String status, Integer page,
+            Integer pageSize) {
         User user = requireUser(userUuid);
         Map<String, Object> group = requireGroupAndMembership(groupId, user.getId());
         requireOwnerOrEditor(group);
@@ -349,23 +349,23 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         int offset = (p - 1) * size;
         String statusFilter = trim(status).toLowerCase(Locale.ROOT);
         if (!statusFilter.isEmpty() && !"pending".equals(statusFilter) && !"accepted".equals(statusFilter)
-                && !"rejected".equals(statusFilter) && !"expired".equals(statusFilter) && !"cancelled".equals(statusFilter)) {
+                && !"rejected".equals(statusFilter) && !"expired".equals(statusFilter)
+                && !"cancelled".equals(statusFilter)) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "status不合法");
         }
         String statusSql = statusFilter.isEmpty() ? null : statusFilter;
 
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM space_invites si WHERE si.space_id = ? AND (? IS NULL OR si.status = ?)",
-                Long.class, gid, statusSql, statusSql
-        );
+                Long.class, gid, statusSql, statusSql);
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT si.invite_uuid, si.role_code, si.status, si.expired_at, si.created_at, u.user_uuid AS invitee_user_uuid, si.invitee_email " +
+                "SELECT si.invite_uuid, si.role_code, si.status, si.expired_at, si.created_at, u.user_uuid AS invitee_user_uuid, si.invitee_email "
+                        +
                         "FROM space_invites si " +
                         "LEFT JOIN users u ON u.id = si.invitee_user_id " +
                         "WHERE si.space_id = ? AND (? IS NULL OR si.status = ?) " +
                         "ORDER BY si.created_at DESC, si.id DESC LIMIT ?, ?",
-                mapRowMapper(), gid, statusSql, statusSql, offset, size
-        );
+                mapRowMapper(), gid, statusSql, statusSql, offset, size);
 
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
@@ -396,8 +396,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         int changed = jdbcTemplate.update(
                 "UPDATE space_invites SET status = 'cancelled', updated_at = NOW() " +
                         "WHERE invite_uuid = ? AND space_id = ? AND status = 'pending'",
-                trim(inviteId), gid
-        );
+                trim(inviteId), gid);
         if (changed <= 0) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "邀请不存在或不可取消");
         }
@@ -428,15 +427,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Long gid = longObj(invite.get("space_id"));
         String role = normalizeRole(str(invite.get("role_code")), false);
         jdbcTemplate.update(
-                "INSERT INTO space_members (space_id, user_id, role_code, status, joined_at, invited_at, inviter_user_id, created_at, updated_at) " +
+                "INSERT INTO space_members (space_id, user_id, role_code, status, joined_at, invited_at, inviter_user_id, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, 1, NOW(), NOW(), ?, NOW(), NOW()) " +
                         "ON DUPLICATE KEY UPDATE role_code = VALUES(role_code), status = 1, joined_at = NOW(), updated_at = NOW()",
-                gid, user.getId(), role, invite.get("inviter_user_id")
-        );
+                gid, user.getId(), role, invite.get("inviter_user_id"));
         jdbcTemplate.update(
                 "UPDATE space_invites SET status = 'accepted', accepted_at = NOW(), updated_at = NOW() WHERE id = ?",
-                invite.get("id")
-        );
+                invite.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("inviteId", invite.get("invite_uuid"));
         data.put("accepted", true);
@@ -454,8 +452,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         jdbcTemplate.update(
                 "UPDATE space_invites SET status = 'rejected', rejected_at = NOW(), updated_at = NOW() WHERE id = ?",
-                invite.get("id")
-        );
+                invite.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("inviteId", invite.get("invite_uuid"));
         data.put("rejected", true);
@@ -463,8 +460,59 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> listMyInvites(String userUuid, Integer page, Integer pageSize) {
+        User user = requireUser(userUuid);
+        int[] paged = normalizePage(page, pageSize);
+        int p = paged[0];
+        int size = paged[1];
+        int offset = (p - 1) * size;
+        String userEmail = trim(user.getEmail()).toLowerCase(Locale.ROOT);
+
+        Long total = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM space_invites si " +
+                        "WHERE si.status = 'pending' " +
+                        "AND (si.invitee_user_id = ? OR (si.invitee_user_id IS NULL AND LOWER(si.invitee_email) = ?)) "
+                        +
+                        "AND (si.expired_at IS NULL OR si.expired_at > NOW())",
+                Long.class, user.getId(), userEmail);
+
+        List<Map<String, Object>> rows = jdbcTemplate.query(
+                "SELECT si.invite_uuid, si.role_code, si.status, si.expired_at, si.created_at, " +
+                        "si.inviter_user_id, s.name AS group_name, s.space_uuid " +
+                        "FROM space_invites si " +
+                        "JOIN spaces s ON s.id = si.space_id " +
+                        "LEFT JOIN users u ON u.id = si.inviter_user_id " +
+                        "WHERE si.status = 'pending' " +
+                        "AND (si.invitee_user_id = ? OR (si.invitee_user_id IS NULL AND LOWER(si.invitee_email) = ?)) "
+                        +
+                        "AND (si.expired_at IS NULL OR si.expired_at > NOW()) " +
+                        "ORDER BY si.created_at DESC, si.id DESC LIMIT ?, ?",
+                mapRowMapper(), user.getId(), userEmail, offset, size);
+
+        List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> item = new LinkedHashMap<String, Object>();
+            item.put("inviteId", str(row.get("invite_uuid")));
+            item.put("groupId", str(row.get("space_uuid")));
+            item.put("groupName", str(row.get("group_name")));
+            item.put("inviterUserId", str(row.get("inviter_user_id")));
+            item.put("role", str(row.get("role_code")));
+            item.put("status", str(row.get("status")));
+            item.put("expiredAt", dt(row.get("expired_at")));
+            item.put("createdAt", dt(row.get("created_at")));
+            items.add(item);
+        }
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("total", total == null ? 0L : total.longValue());
+        data.put("items", items);
+        return data;
+    }
+
+    @Override
     @Transactional
-    public Map<String, Object> updateMemberRole(String userUuid, String groupId, String targetUserId, Map<String, Object> request) {
+    public Map<String, Object> updateMemberRole(String userUuid, String groupId, String targetUserId,
+            Map<String, Object> request) {
         User user = requireUser(userUuid);
         Map<String, Object> group = requireGroupAndMembership(groupId, user.getId());
         requireOwner(group);
@@ -475,12 +523,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         String role = normalizeRole(str(request, "role"), true);
         if ("owner".equals(role) && !target.getId().equals(user.getId())) {
-            jdbcTemplate.update("UPDATE space_members SET role_code = 'editor', updated_at = NOW() WHERE space_id = ? AND user_id = ? AND status = 1", group.get("id"), user.getId());
+            jdbcTemplate.update(
+                    "UPDATE space_members SET role_code = 'editor', updated_at = NOW() WHERE space_id = ? AND user_id = ? AND status = 1",
+                    group.get("id"), user.getId());
         }
         int changed = jdbcTemplate.update(
                 "UPDATE space_members SET role_code = ?, updated_at = NOW() WHERE space_id = ? AND user_id = ? AND status = 1",
-                role, group.get("id"), target.getId()
-        );
+                role, group.get("id"), target.getId());
         if (changed <= 0) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "成员不存在或已移除");
         }
@@ -505,8 +554,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         int changed = jdbcTemplate.update(
                 "UPDATE space_members SET status = 2, removed_at = NOW(), updated_at = NOW() WHERE space_id = ? AND user_id = ? AND status = 1",
-                group.get("id"), target.getId()
-        );
+                group.get("id"), target.getId());
         if (changed <= 0) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "成员不存在或已移除");
         }
@@ -527,25 +575,24 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         Integer memberExists = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM space_members WHERE space_id = ? AND user_id = ? AND status = 1",
-                Integer.class, group.get("id"), user.getId()
-        );
+                Integer.class, group.get("id"), user.getId());
         if (memberExists != null && memberExists.intValue() > 0) {
             throw new BizException(ErrorCode.CONFLICT, 409, "你已经是群成员");
         }
 
         Integer pending = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM space_join_requests WHERE space_id = ? AND applicant_user_id = ? AND status = 'pending'",
-                Integer.class, group.get("id"), user.getId()
-        );
+                Integer.class, group.get("id"), user.getId());
         if (pending != null && pending.intValue() > 0) {
             throw new BizException(ErrorCode.CONFLICT, 409, "已有待处理申请");
         }
 
         jdbcTemplate.update(
-                "INSERT INTO space_join_requests (request_uuid, space_id, applicant_user_id, message, status, created_at, updated_at) " +
+                "INSERT INTO space_join_requests (request_uuid, space_id, applicant_user_id, message, status, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, ?, 'pending', NOW(), NOW())",
-                UUID.randomUUID().toString(), group.get("id"), user.getId(), emptyToNull(trim(str(request, "message")))
-        );
+                UUID.randomUUID().toString(), group.get("id"), user.getId(),
+                emptyToNull(trim(str(request, "message"))));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("submitted", true);
         return data;
@@ -562,16 +609,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM space_join_requests WHERE applicant_user_id = ?",
-                Long.class, user.getId()
-        );
+                Long.class, user.getId());
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT jr.request_uuid, jr.status, jr.message, jr.created_at, s.space_uuid, s.name AS group_name " +
                         "FROM space_join_requests jr " +
                         "JOIN spaces s ON s.id = jr.space_id " +
                         "WHERE jr.applicant_user_id = ? " +
                         "ORDER BY jr.created_at DESC, jr.id DESC LIMIT ?, ?",
-                mapRowMapper(), user.getId(), offset, size
-        );
+                mapRowMapper(), user.getId(), offset, size);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -591,7 +636,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> listGroupJoinRequests(String userUuid, String groupId, String status, Integer page, Integer pageSize) {
+    public Map<String, Object> listGroupJoinRequests(String userUuid, String groupId, String status, Integer page,
+            Integer pageSize) {
         User user = requireUser(userUuid);
         Map<String, Object> group = requireGroupAndMembership(groupId, user.getId());
         requireOwnerOrEditor(group);
@@ -604,16 +650,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM space_join_requests WHERE space_id = ? AND (? IS NULL OR status = ?)",
-                Long.class, group.get("id"), statusSql, statusSql
-        );
+                Long.class, group.get("id"), statusSql, statusSql);
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT jr.request_uuid, jr.message, jr.status, jr.created_at, u.user_uuid, u.nickname, u.email " +
                         "FROM space_join_requests jr " +
                         "JOIN users u ON u.id = jr.applicant_user_id " +
                         "WHERE jr.space_id = ? AND (? IS NULL OR jr.status = ?) " +
                         "ORDER BY jr.created_at DESC, jr.id DESC LIMIT ?, ?",
-                mapRowMapper(), group.get("id"), statusSql, statusSql, offset, size
-        );
+                mapRowMapper(), group.get("id"), statusSql, statusSql, offset, size);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -644,12 +688,10 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                 "INSERT INTO space_members (space_id, user_id, role_code, status, joined_at, created_at, updated_at) " +
                         "VALUES (?, ?, 'viewer', 1, NOW(), NOW(), NOW()) " +
                         "ON DUPLICATE KEY UPDATE status = 1, role_code = IF(role_code='owner', role_code, 'viewer'), updated_at = NOW()",
-                group.get("id"), req.get("applicant_user_id")
-        );
+                group.get("id"), req.get("applicant_user_id"));
         jdbcTemplate.update(
                 "UPDATE space_join_requests SET status = 'approved', reviewer_user_id = ?, reviewed_at = NOW(), updated_at = NOW() WHERE id = ?",
-                user.getId(), req.get("id")
-        );
+                user.getId(), req.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("requestId", requestId);
         data.put("approved", true);
@@ -665,8 +707,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Map<String, Object> req = requireJoinRequest(group.get("id"), requestId);
         jdbcTemplate.update(
                 "UPDATE space_join_requests SET status = 'rejected', reviewer_user_id = ?, reviewed_at = NOW(), updated_at = NOW() WHERE id = ?",
-                user.getId(), req.get("id")
-        );
+                user.getId(), req.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("requestId", requestId);
         data.put("rejected", true);
@@ -680,8 +721,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Map<String, Object> resource = requireOwnedResource(user.getId(), resourceId);
         jdbcTemplate.update(
                 "INSERT INTO user_favorites (user_id, resource_id, created_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE created_at = created_at",
-                user.getId(), resource.get("id")
-        );
+                user.getId(), resource.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("resourceId", resourceId);
         data.put("favorited", true);
@@ -693,7 +733,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     public Map<String, Object> unfavoriteResource(String userUuid, String resourceId) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResource(user.getId(), resourceId);
-        jdbcTemplate.update("DELETE FROM user_favorites WHERE user_id = ? AND resource_id = ?", user.getId(), resource.get("id"));
+        jdbcTemplate.update("DELETE FROM user_favorites WHERE user_id = ? AND resource_id = ?", user.getId(),
+                resource.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("resourceId", resourceId);
         data.put("favorited", false);
@@ -710,16 +751,15 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         int offset = (p - 1) * size;
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM user_favorites uf JOIN resources r ON r.id = uf.resource_id WHERE uf.user_id = ? AND r.is_deleted = 0",
-                Long.class, user.getId()
-        );
+                Long.class, user.getId());
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT r.resource_uuid, r.resource_type, r.name, r.extension, r.size_bytes, r.updated_at, uf.created_at AS favorited_at " +
+                "SELECT r.resource_uuid, r.resource_type, r.name, r.extension, r.size_bytes, r.updated_at, uf.created_at AS favorited_at "
+                        +
                         "FROM user_favorites uf " +
                         "JOIN resources r ON r.id = uf.resource_id " +
                         "WHERE uf.user_id = ? AND r.is_deleted = 0 " +
                         "ORDER BY uf.created_at DESC, uf.id DESC LIMIT ?, ?",
-                mapRowMapper(), user.getId(), offset, size
-        );
+                mapRowMapper(), user.getId(), offset, size);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -750,15 +790,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         try {
             jdbcTemplate.update(
                     "INSERT INTO tags (tag_uuid, owner_user_id, name, color, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-                    UUID.randomUUID().toString(), user.getId(), name, emptyToNull(color)
-            );
+                    UUID.randomUUID().toString(), user.getId(), name, emptyToNull(color));
         } catch (Exception ex) {
             throw new BizException(ErrorCode.CONFLICT, 409, "标签名称重复");
         }
         Map<String, Object> row = jdbcTemplate.queryForObject(
                 "SELECT tag_uuid, name, color, created_at FROM tags WHERE owner_user_id = ? AND name = ? ORDER BY id DESC LIMIT 1",
-                mapRowMapper(), user.getId(), name
-        );
+                mapRowMapper(), user.getId(), name);
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", row.get("tag_uuid"));
         data.put("name", row.get("name"));
@@ -778,15 +816,15 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "WHERE t.owner_user_id = ? " +
                         "GROUP BY t.id, t.tag_uuid, t.name, t.color, t.created_at " +
                         "ORDER BY t.created_at DESC, t.id DESC",
-                mapRowMapper(), user.getId()
-        );
+                mapRowMapper(), user.getId());
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
             item.put("id", row.get("tag_uuid"));
             item.put("name", row.get("name"));
             item.put("color", row.get("color"));
-            item.put("resourceCount", longObj(row.get("resource_count")) == null ? 0L : longObj(row.get("resource_count")));
+            item.put("resourceCount",
+                    longObj(row.get("resource_count")) == null ? 0L : longObj(row.get("resource_count")));
             item.put("createdAt", dt(row.get("created_at")));
             items.add(item);
         }
@@ -847,8 +885,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Map<String, Object> tag = requireOwnedTag(user.getId(), tagId);
         jdbcTemplate.update(
                 "INSERT INTO resource_tags (resource_id, tag_id, created_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE created_at = created_at",
-                resource.get("id"), tag.get("id")
-        );
+                resource.get("id"), tag.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("resourceId", resourceId);
         data.put("tagId", tagId);
@@ -862,7 +899,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResource(user.getId(), resourceId);
         Map<String, Object> tag = requireOwnedTag(user.getId(), tagId);
-        jdbcTemplate.update("DELETE FROM resource_tags WHERE resource_id = ? AND tag_id = ?", resource.get("id"), tag.get("id"));
+        jdbcTemplate.update("DELETE FROM resource_tags WHERE resource_id = ? AND tag_id = ?", resource.get("id"),
+                tag.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("resourceId", resourceId);
         data.put("tagId", tagId);
@@ -881,8 +919,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "JOIN tags t ON t.id = rt.tag_id " +
                         "WHERE rt.resource_id = ? AND t.owner_user_id = ? " +
                         "ORDER BY rt.created_at DESC, rt.id DESC",
-                mapRowMapper(), resource.get("id"), user.getId()
-        );
+                mapRowMapper(), resource.get("id"), user.getId());
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -899,7 +936,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional
-    public Map<String, Object> listResourceVersions(String userUuid, String resourceId, Integer page, Integer pageSize) {
+    public Map<String, Object> listResourceVersions(String userUuid, String resourceId, Integer page,
+            Integer pageSize) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResourceDetail(user.getId(), resourceId);
         int[] paged = normalizePage(page, pageSize);
@@ -908,15 +946,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM resource_versions WHERE resource_id = ?",
-                Long.class, resource.get("id")
-        );
+                Long.class, resource.get("id"));
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT rv.version_no, rv.size_bytes, rv.sha256, rv.change_summary, rv.created_at, u.user_uuid, u.nickname " +
+                "SELECT rv.version_no, rv.size_bytes, rv.sha256, rv.change_summary, rv.created_at, u.user_uuid, u.nickname "
+                        +
                         "FROM resource_versions rv " +
                         "JOIN users u ON u.id = rv.uploader_user_id " +
                         "WHERE rv.resource_id = ? ORDER BY rv.version_no DESC LIMIT ?, ?",
-                mapRowMapper(), resource.get("id"), offset, paged[1]
-        );
+                mapRowMapper(), resource.get("id"), offset, paged[1]);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> uploader = new LinkedHashMap<String, Object>();
@@ -939,23 +976,26 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional
-    public Map<String, Object> initResourceVersionUpload(String userUuid, String resourceId, Map<String, Object> request) {
+    public Map<String, Object> initResourceVersionUpload(String userUuid, String resourceId,
+            Map<String, Object> request) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResourceDetail(user.getId(), resourceId);
         String filename = trim(str(request, "filename"));
         Long totalSize = longVal(request, "totalSize");
         Integer totalParts = intVal(request, "totalParts");
         String sha256 = trim(str(request, "sha256")).toLowerCase(Locale.ROOT);
-        if (filename.isEmpty() || totalSize == null || totalSize.longValue() <= 0L || totalParts == null || totalParts.intValue() <= 0) {
+        if (filename.isEmpty() || totalSize == null || totalSize.longValue() <= 0L || totalParts == null
+                || totalParts.intValue() <= 0) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "filename/totalSize/totalParts必填");
         }
         String uploadId = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO upload_sessions (upload_uuid, user_id, space_id, parent_resource_id, filename, total_size, total_parts, sha256, status, expires_at, created_at, updated_at, client_upload_id) " +
+                "INSERT INTO upload_sessions (upload_uuid, user_id, space_id, parent_resource_id, filename, total_size, total_parts, sha256, status, expires_at, created_at, updated_at, client_upload_id) "
+                        +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'initiated', DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW(), NOW(), ?)",
-                uploadId, user.getId(), resource.get("space_id"), resource.get("parent_id"), filename, totalSize, totalParts,
-                emptyToNull(sha256), "v2ver:" + resourceId + ":" + uploadId
-        );
+                uploadId, user.getId(), resource.get("space_id"), resource.get("parent_id"), filename, totalSize,
+                totalParts,
+                emptyToNull(sha256), "v2ver:" + resourceId + ":" + uploadId);
         try {
             Files.createDirectories(Paths.get("data", "local-storage", "uploads", uploadId));
         } catch (IOException ex) {
@@ -970,7 +1010,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional
-    public Map<String, Object> uploadResourceVersionPart(String userUuid, String resourceId, String uploadId, Integer partNumber, InputStream stream) {
+    public Map<String, Object> uploadResourceVersionPart(String userUuid, String resourceId, String uploadId,
+            Integer partNumber, InputStream stream) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResourceDetail(user.getId(), resourceId);
         Map<String, Object> session = requireUploadSession(uploadId, user.getId());
@@ -987,12 +1028,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         String etag = md5File(partPath);
 
         jdbcTemplate.update(
-                "INSERT INTO upload_parts (upload_session_id, part_number, part_size, etag, checksum, status, created_at, updated_at) " +
+                "INSERT INTO upload_parts (upload_session_id, part_number, part_size, etag, checksum, status, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, ?, NULL, 'uploaded', NOW(), NOW()) " +
                         "ON DUPLICATE KEY UPDATE part_size = VALUES(part_size), etag = VALUES(etag), status = 'uploaded', updated_at = NOW()",
-                session.get("id"), pn, size, etag
-        );
-        jdbcTemplate.update("UPDATE upload_sessions SET status = 'uploading', updated_at = NOW() WHERE id = ?", session.get("id"));
+                session.get("id"), pn, size, etag);
+        jdbcTemplate.update("UPDATE upload_sessions SET status = 'uploading', updated_at = NOW() WHERE id = ?",
+                session.get("id"));
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("partNumber", pn);
@@ -1003,12 +1045,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional
-    public Map<String, Object> completeResourceVersionUpload(String userUuid, String resourceId, String uploadId, Map<String, Object> request) {
+    public Map<String, Object> completeResourceVersionUpload(String userUuid, String resourceId, String uploadId,
+            Map<String, Object> request) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResourceDetail(user.getId(), resourceId);
         Map<String, Object> session = requireUploadSession(uploadId, user.getId());
         Integer totalParts = intObj(session.get("total_parts"));
-        Long uploadedParts = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM upload_parts WHERE upload_session_id = ?", Long.class, session.get("id"));
+        Long uploadedParts = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM upload_parts WHERE upload_session_id = ?", Long.class, session.get("id"));
         if (uploadedParts == null || totalParts == null || uploadedParts.longValue() != totalParts.intValue()) {
             throw new BizException(ErrorCode.CONFLICT, 409, "分片未上传完整");
         }
@@ -1033,22 +1077,23 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
 
         Long objectId = findOrCreateStorageObject(mergeFile, sha256, size);
-        Integer maxNo = jdbcTemplate.queryForObject("SELECT COALESCE(MAX(version_no), 0) FROM resource_versions WHERE resource_id = ?", Integer.class, resource.get("id"));
+        Integer maxNo = jdbcTemplate.queryForObject(
+                "SELECT COALESCE(MAX(version_no), 0) FROM resource_versions WHERE resource_id = ?", Integer.class,
+                resource.get("id"));
         int newVersionNo = (maxNo == null ? 0 : maxNo.intValue()) + 1;
         String changeSummary = trim(str(request, "changeSummary"));
         jdbcTemplate.update(
-                "INSERT INTO resource_versions (version_uuid, resource_id, version_no, object_id, size_bytes, sha256, uploader_user_id, change_summary, created_at) " +
+                "INSERT INTO resource_versions (version_uuid, resource_id, version_no, object_id, size_bytes, sha256, uploader_user_id, change_summary, created_at) "
+                        +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())",
-                UUID.randomUUID().toString(), resource.get("id"), newVersionNo, objectId, size, sha256, user.getId(), emptyToNull(changeSummary)
-        );
+                UUID.randomUUID().toString(), resource.get("id"), newVersionNo, objectId, size, sha256, user.getId(),
+                emptyToNull(changeSummary));
         jdbcTemplate.update(
                 "UPDATE resources SET object_id = ?, size_bytes = ?, version_no = ?, updated_at = NOW() WHERE id = ?",
-                objectId, size, newVersionNo, resource.get("id")
-        );
+                objectId, size, newVersionNo, resource.get("id"));
         jdbcTemplate.update(
                 "UPDATE upload_sessions SET status = 'completed', completed_at = NOW(), updated_at = NOW() WHERE id = ?",
-                session.get("id")
-        );
+                session.get("id"));
         cleanupUploadDir(trim(uploadId));
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
@@ -1070,8 +1115,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Map<String, Object> version = requireResourceVersion(resource.get("id"), versionNo);
         jdbcTemplate.update(
                 "UPDATE resources SET object_id = ?, size_bytes = ?, version_no = ?, updated_at = NOW() WHERE id = ?",
-                version.get("object_id"), version.get("size_bytes"), versionNo, resource.get("id")
-        );
+                version.get("object_id"), version.get("size_bytes"), versionNo, resource.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("resourceId", resourceId);
         data.put("versionNo", versionNo);
@@ -1081,18 +1125,19 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     @Override
     @Transactional
-    public Map<String, Object> getResourceVersionDownloadUrl(String userUuid, String resourceId, Integer versionNo, String requestBaseUrl) {
+    public Map<String, Object> getResourceVersionDownloadUrl(String userUuid, String resourceId, Integer versionNo,
+            String requestBaseUrl) {
         User user = requireUser(userUuid);
         Map<String, Object> resource = requireOwnedResourceDetail(user.getId(), resourceId);
         ensureCurrentVersionSnapshot(resource, user.getId());
         Map<String, Object> version = requireResourceVersion(resource.get("id"), versionNo);
         Map<String, Object> object = jdbcTemplate.queryForObject(
                 "SELECT object_key FROM storage_objects WHERE id = ? LIMIT 1",
-                mapRowMapper(), version.get("object_id")
-        );
+                mapRowMapper(), version.get("object_id"));
         String base = normalizeBaseUrl(requestBaseUrl);
         long exp = Instant.now().getEpochSecond() + 3600L;
-        String sig = FileAccessSigner.sign(appProperties.resolveFileAccessSecret(), resourceId, user.getUserUuid(), exp, "download");
+        String sig = FileAccessSigner.sign(appProperties.resolveFileAccessSecret(), resourceId, user.getUserUuid(), exp,
+                "download");
         String url = base + "/api/v1/file-access?resourceId=" + urlEncode(resourceId)
                 + "&userId=" + urlEncode(user.getUserUuid())
                 + "&exp=" + exp
@@ -1117,10 +1162,10 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         String jobId = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO preview_jobs (job_uuid, resource_id, object_id, job_type, status, retry_count, created_at, updated_at) " +
+                "INSERT INTO preview_jobs (job_uuid, resource_id, object_id, job_type, status, retry_count, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, ?, ?, 'pending', 0, NOW(), NOW())",
-                jobId, resource.get("id"), resource.get("object_id"), jobType
-        );
+                jobId, resource.get("id"), resource.get("object_id"), jobType);
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("jobId", jobId);
         data.put("status", "pending");
@@ -1152,21 +1197,21 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         int[] paged = normalizePage(page, pageSize);
         int offset = (paged[0] - 1) * paged[1];
         String st = trim(status).toLowerCase(Locale.ROOT);
-        if (!st.isEmpty() && !"pending".equals(st) && !"running".equals(st) && !"success".equals(st) && !"failed".equals(st)) {
+        if (!st.isEmpty() && !"pending".equals(st) && !"running".equals(st) && !"success".equals(st)
+                && !"failed".equals(st)) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "status不合法");
         }
         String stSql = st.isEmpty() ? null : st;
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM preview_jobs pj JOIN resources r ON r.id = pj.resource_id WHERE r.owner_user_id = ? AND (? IS NULL OR pj.status = ?)",
-                Long.class, user.getId(), stSql, stSql
-        );
+                Long.class, user.getId(), stSql, stSql);
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT pj.job_uuid, pj.job_type, pj.status, pj.error_message, pj.started_at, pj.finished_at, r.resource_uuid " +
+                "SELECT pj.job_uuid, pj.job_type, pj.status, pj.error_message, pj.started_at, pj.finished_at, r.resource_uuid "
+                        +
                         "FROM preview_jobs pj JOIN resources r ON r.id = pj.resource_id " +
                         "WHERE r.owner_user_id = ? AND (? IS NULL OR pj.status = ?) " +
                         "ORDER BY pj.created_at DESC, pj.id DESC LIMIT ?, ?",
-                mapRowMapper(), user.getId(), stSql, stSql, offset, paged[1]
-        );
+                mapRowMapper(), user.getId(), stSql, stSql, offset, paged[1]);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -1248,14 +1293,15 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Map<String, Object> share = requireOwnedShare(user.getId(), shareId);
         int[] paged = normalizePage(page, pageSize);
         int offset = (paged[0] - 1) * paged[1];
-        Long total = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM share_access_logs WHERE share_id = ?", Long.class, share.get("id"));
+        Long total = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM share_access_logs WHERE share_id = ?",
+                Long.class, share.get("id"));
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT sal.id, sal.ip, sal.user_agent, sal.request_id, sal.verify_passed, sal.accessed_at, u.user_uuid AS visitor_user_uuid " +
+                "SELECT sal.id, sal.ip, sal.user_agent, sal.request_id, sal.verify_passed, sal.accessed_at, u.user_uuid AS visitor_user_uuid "
+                        +
                         "FROM share_access_logs sal " +
                         "LEFT JOIN users u ON u.id = sal.visitor_user_id " +
                         "WHERE sal.share_id = ? ORDER BY sal.accessed_at DESC, sal.id DESC LIMIT ?, ?",
-                mapRowMapper(), share.get("id"), offset, paged[1]
-        );
+                mapRowMapper(), share.get("id"), offset, paged[1]);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -1285,12 +1331,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                         "COUNT(DISTINCT CONCAT(IFNULL(visitor_user_id,0), '#', IFNULL(ip,''))) AS unique_visitors, " +
                         "MAX(accessed_at) AS last_access_at " +
                         "FROM share_access_logs WHERE share_id = ?",
-                mapRowMapper(), share.get("id")
-        );
+                mapRowMapper(), share.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("visitTotal", longObj(stats.get("visit_total")) == null ? 0L : longObj(stats.get("visit_total")));
-        data.put("downloadTotal", longObj(stats.get("download_total")) == null ? 0L : longObj(stats.get("download_total")));
-        data.put("uniqueVisitors", longObj(stats.get("unique_visitors")) == null ? 0L : longObj(stats.get("unique_visitors")));
+        data.put("downloadTotal",
+                longObj(stats.get("download_total")) == null ? 0L : longObj(stats.get("download_total")));
+        data.put("uniqueVisitors",
+                longObj(stats.get("unique_visitors")) == null ? 0L : longObj(stats.get("unique_visitors")));
         data.put("lastAccessAt", dt(stats.get("last_access_at")));
         return data;
     }
@@ -1305,14 +1352,12 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM notifications WHERE user_id = ? AND (? = 0 OR is_read = 0)",
-                Long.class, user.getId(), onlyUnread ? 1 : 0
-        );
+                Long.class, user.getId(), onlyUnread ? 1 : 0);
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT notification_uuid, type, title, content, payload_json, is_read, read_at, created_at " +
                         "FROM notifications WHERE user_id = ? AND (? = 0 OR is_read = 0) " +
                         "ORDER BY created_at DESC, id DESC LIMIT ?, ?",
-                mapRowMapper(), user.getId(), onlyUnread ? 1 : 0, offset, paged[1]
-        );
+                mapRowMapper(), user.getId(), onlyUnread ? 1 : 0, offset, paged[1]);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -1337,7 +1382,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     public Map<String, Object> readNotification(String userUuid, String notificationId) {
         User user = requireUser(userUuid);
         Map<String, Object> notification = requireOwnedNotification(user.getId(), notificationId);
-        jdbcTemplate.update("UPDATE notifications SET is_read = 1, read_at = NOW() WHERE id = ?", notification.get("id"));
+        jdbcTemplate.update("UPDATE notifications SET is_read = 1, read_at = NOW() WHERE id = ?",
+                notification.get("id"));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", notificationId);
         data.put("read", true);
@@ -1348,7 +1394,9 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     @Transactional
     public Map<String, Object> readAllNotifications(String userUuid) {
         User user = requireUser(userUuid);
-        int changed = jdbcTemplate.update("UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0", user.getId());
+        int changed = jdbcTemplate.update(
+                "UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0",
+                user.getId());
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("updated", changed);
         return data;
@@ -1392,15 +1440,14 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         Long gid = longObj(group.get("id"));
         Long total = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM resources WHERE space_id = ? AND is_deleted = 0",
-                Long.class, gid
-        );
+                Long.class, gid);
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT resource_uuid, parent_id, resource_type, name, extension, size_bytes, created_at, updated_at " +
                         "FROM resources WHERE space_id = ? AND is_deleted = 0 " +
-                        "ORDER BY CASE WHEN resource_type='folder' THEN 0 ELSE 1 END ASC, name_normalized ASC, id ASC " +
+                        "ORDER BY CASE WHEN resource_type='folder' THEN 0 ELSE 1 END ASC, name_normalized ASC, id ASC "
+                        +
                         "LIMIT ?, ?",
-                mapRowMapper(), gid, offset, size
-        );
+                mapRowMapper(), gid, offset, size);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> item = new LinkedHashMap<String, Object>();
@@ -1424,8 +1471,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, resource_uuid, space_id, parent_id, object_id, size_bytes, version_no, name " +
                         "FROM resources WHERE resource_uuid = ? AND owner_user_id = ? AND is_deleted = 0 LIMIT 1",
-                mapRowMapper(), trim(resourceUuid), userId
-        );
+                mapRowMapper(), trim(resourceUuid), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "资源不存在");
         }
@@ -1439,8 +1485,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         Integer exists = jdbcTemplate.queryForObject(
                 "SELECT COUNT(1) FROM resource_versions WHERE resource_id = ? AND version_no = ?",
-                Integer.class, resource.get("id"), currentVersionNo
-        );
+                Integer.class, resource.get("id"), currentVersionNo);
         if (exists != null && exists.intValue() > 0) {
             return;
         }
@@ -1450,10 +1495,10 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         Map<String, Object> object = jdbcTemplate.queryForObject(
                 "SELECT sha256, size_bytes FROM storage_objects WHERE id = ? LIMIT 1",
-                mapRowMapper(), objectId
-        );
+                mapRowMapper(), objectId);
         jdbcTemplate.update(
-                "INSERT INTO resource_versions (version_uuid, resource_id, version_no, object_id, size_bytes, sha256, uploader_user_id, change_summary, created_at) " +
+                "INSERT INTO resource_versions (version_uuid, resource_id, version_no, object_id, size_bytes, sha256, uploader_user_id, change_summary, created_at) "
+                        +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())",
                 UUID.randomUUID().toString(),
                 resource.get("id"),
@@ -1462,15 +1507,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
                 resource.get("size_bytes"),
                 object == null ? null : object.get("sha256"),
                 userId,
-                "initial snapshot"
-        );
+                "initial snapshot");
     }
 
     private Map<String, Object> requireUploadSession(String uploadId, Long userId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, user_id, space_id, total_parts, total_size, sha256, status FROM upload_sessions WHERE upload_uuid = ? LIMIT 1",
-                mapRowMapper(), trim(uploadId)
-        );
+                mapRowMapper(), trim(uploadId));
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "上传会话不存在");
         }
@@ -1569,8 +1612,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Long findOrCreateStorageObject(Path mergedFile, String sha256, long size) {
         Long existingId = jdbcTemplate.queryForObject(
                 "SELECT id FROM storage_objects WHERE sha256 = ? AND size_bytes = ? LIMIT 1",
-                Long.class, sha256, size
-        );
+                Long.class, sha256, size);
         if (existingId != null) {
             return existingId;
         }
@@ -1585,11 +1627,12 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         String objectUuid = UUID.randomUUID().toString();
         jdbcTemplate.update(
-                "INSERT INTO storage_objects (object_uuid, sha256, md5, size_bytes, mime_type, storage_provider, bucket_name, object_key, storage_class, created_at, updated_at) " +
+                "INSERT INTO storage_objects (object_uuid, sha256, md5, size_bytes, mime_type, storage_provider, bucket_name, object_key, storage_class, created_at, updated_at) "
+                        +
                         "VALUES (?, ?, NULL, ?, NULL, 'local', 'local', ?, 'standard', NOW(), NOW())",
-                objectUuid, sha256, size, objectPath.toString().replace("\\", "/")
-        );
-        return jdbcTemplate.queryForObject("SELECT id FROM storage_objects WHERE object_uuid = ? LIMIT 1", Long.class, objectUuid);
+                objectUuid, sha256, size, objectPath.toString().replace("\\", "/"));
+        return jdbcTemplate.queryForObject("SELECT id FROM storage_objects WHERE object_uuid = ? LIMIT 1", Long.class,
+                objectUuid);
     }
 
     private void cleanupUploadDir(String uploadId) {
@@ -1615,8 +1658,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requireResourceVersion(Object resourceId, Integer versionNo) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, version_no, object_id, size_bytes, sha256 FROM resource_versions WHERE resource_id = ? AND version_no = ? LIMIT 1",
-                mapRowMapper(), resourceId, versionNo
-        );
+                mapRowMapper(), resourceId, versionNo);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "版本不存在");
         }
@@ -1642,13 +1684,13 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requirePreviewJobOwnedByUser(Long userId, String jobId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT pj.id, pj.job_uuid, pj.job_type, pj.status, pj.error_message, pj.started_at, pj.finished_at, " +
-                        "r.resource_uuid, so.object_key, CASE WHEN so.id IS NULL THEN NULL ELSE CONCAT('/local/', so.id) END AS output_url " +
+                        "r.resource_uuid, so.object_key, CASE WHEN so.id IS NULL THEN NULL ELSE CONCAT('/local/', so.id) END AS output_url "
+                        +
                         "FROM preview_jobs pj " +
                         "JOIN resources r ON r.id = pj.resource_id " +
                         "LEFT JOIN storage_objects so ON so.id = pj.output_object_id " +
                         "WHERE pj.job_uuid = ? AND r.owner_user_id = ? LIMIT 1",
-                mapRowMapper(), trim(jobId), userId
-        );
+                mapRowMapper(), trim(jobId), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "任务不存在");
         }
@@ -1657,10 +1699,10 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     private Map<String, Object> requireOwnedShare(Long userId, String shareId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT id, share_uuid, allow_preview, allow_download, need_login, allow_save_to_mine, max_access_count, expired_at, access_scope_json " +
+                "SELECT id, share_uuid, allow_preview, allow_download, need_login, allow_save_to_mine, max_access_count, expired_at, access_scope_json "
+                        +
                         "FROM shares WHERE share_uuid = ? AND creator_user_id = ? LIMIT 1",
-                mapRowMapper(), trim(shareId), userId
-        );
+                mapRowMapper(), trim(shareId), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "分享不存在");
         }
@@ -1705,8 +1747,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requireOwnedNotification(Long userId, String notificationId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id FROM notifications WHERE notification_uuid = ? AND user_id = ? LIMIT 1",
-                mapRowMapper(), trim(notificationId), userId
-        );
+                mapRowMapper(), trim(notificationId), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "通知不存在");
         }
@@ -1715,10 +1756,10 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     private Map<String, Object> requireGroup(String groupId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT id, space_uuid, owner_user_id, name, description, visibility, avatar_url, quota_bytes, used_bytes, max_members, created_at, is_archived, status " +
+                "SELECT id, space_uuid, owner_user_id, name, description, visibility, avatar_url, quota_bytes, used_bytes, max_members, created_at, is_archived, status "
+                        +
                         "FROM spaces WHERE space_uuid = ? AND space_type = 'team'",
-                mapRowMapper(), trim(groupId)
-        );
+                mapRowMapper(), trim(groupId));
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "群组不存在");
         }
@@ -1742,12 +1783,12 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
 
     private Map<String, Object> requireGroupAndMembership(String groupId, Long userId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT s.id, s.space_uuid, s.owner_user_id, s.name, s.description, s.visibility, s.avatar_url, s.quota_bytes, s.used_bytes, s.max_members, s.created_at, s.is_archived, s.status, sm.role_code " +
+                "SELECT s.id, s.space_uuid, s.owner_user_id, s.name, s.description, s.visibility, s.avatar_url, s.quota_bytes, s.used_bytes, s.max_members, s.created_at, s.is_archived, s.status, sm.role_code "
+                        +
                         "FROM spaces s " +
                         "JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = ? AND sm.status = 1 " +
                         "WHERE s.space_uuid = ? AND s.space_type = 'team' LIMIT 1",
-                mapRowMapper(), userId, trim(groupId)
-        );
+                mapRowMapper(), userId, trim(groupId));
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "群组不存在或无权访问");
         }
@@ -1761,8 +1802,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> buildGroupDetail(Map<String, Object> group) {
         Map<String, Object> owner = jdbcTemplate.queryForObject(
                 "SELECT user_uuid, nickname, email, avatar_url FROM users WHERE id = ? LIMIT 1",
-                mapRowMapper(), group.get("owner_user_id")
-        );
+                mapRowMapper(), group.get("owner_user_id"));
         Map<String, Object> ownerObj = new LinkedHashMap<String, Object>();
         ownerObj.put("userId", owner == null ? null : owner.get("user_uuid"));
         ownerObj.put("nickname", owner == null ? null : owner.get("nickname"));
@@ -1787,17 +1827,18 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     }
 
     private Long countMembers(Long spaceId) {
-        Long c = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM space_members WHERE space_id = ? AND status = 1", Long.class, spaceId);
+        Long c = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM space_members WHERE space_id = ? AND status = 1",
+                Long.class, spaceId);
         return c == null ? 0L : c.longValue();
     }
 
     private Map<String, Object> requirePendingInvite(String inviteToken) {
         String tokenHash = sha256Hex(trim(inviteToken));
         List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT id, invite_uuid, space_id, inviter_user_id, invitee_user_id, invitee_email, role_code, status, expired_at " +
+                "SELECT id, invite_uuid, space_id, inviter_user_id, invitee_user_id, invitee_email, role_code, status, expired_at "
+                        +
                         "FROM space_invites WHERE token_hash = ? LIMIT 1",
-                mapRowMapper(), tokenHash
-        );
+                mapRowMapper(), tokenHash);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "邀请不存在");
         }
@@ -1807,7 +1848,8 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         }
         String expiredAt = dt(invite.get("expired_at"));
         if (!expiredAt.isEmpty() && expiredAt.compareTo(now()) < 0) {
-            jdbcTemplate.update("UPDATE space_invites SET status = 'expired', updated_at = NOW() WHERE id = ?", invite.get("id"));
+            jdbcTemplate.update("UPDATE space_invites SET status = 'expired', updated_at = NOW() WHERE id = ?",
+                    invite.get("id"));
             throw new BizException(ErrorCode.CONFLICT, 409, "邀请已过期");
         }
         return invite;
@@ -1816,8 +1858,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requireJoinRequest(Object spaceId, String requestId) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, applicant_user_id, status FROM space_join_requests WHERE request_uuid = ? AND space_id = ? LIMIT 1",
-                mapRowMapper(), trim(requestId), spaceId
-        );
+                mapRowMapper(), trim(requestId), spaceId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "申请不存在");
         }
@@ -1831,8 +1872,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requireOwnedResource(Long userId, String resourceUuid) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, resource_uuid FROM resources WHERE resource_uuid = ? AND owner_user_id = ? AND is_deleted = 0 LIMIT 1",
-                mapRowMapper(), trim(resourceUuid), userId
-        );
+                mapRowMapper(), trim(resourceUuid), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "资源不存在");
         }
@@ -1842,8 +1882,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
     private Map<String, Object> requireOwnedTag(Long userId, String tagUuid) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 "SELECT id, tag_uuid, name, color FROM tags WHERE tag_uuid = ? AND owner_user_id = ? LIMIT 1",
-                mapRowMapper(), trim(tagUuid), userId
-        );
+                mapRowMapper(), trim(tagUuid), userId);
         if (rows.isEmpty()) {
             throw new BizException(ErrorCode.NOT_FOUND, 404, "标签不存在");
         }
@@ -1907,7 +1946,7 @@ public class TeamSpaceV2ServiceImpl implements TeamSpaceV2Service {
         if (p < 1 || size < 1 || size > 200) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "分页参数不合法");
         }
-        return new int[]{p, size};
+        return new int[] { p, size };
     }
 
     private String normalizeLikeKeyword(String keyword) {

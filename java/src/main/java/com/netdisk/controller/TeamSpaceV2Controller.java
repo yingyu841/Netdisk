@@ -32,7 +32,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listMyGroups(currentUser(req), keyword, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listMyGroups(currentUser(req), keyword, page, pageSize),
+                requestId(req));
     }
 
     @GetMapping("/groups/{groupId}")
@@ -45,7 +46,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String groupId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.updateGroup(currentUser(req), groupId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.updateGroup(currentUser(req), groupId, safeBody(request)),
+                requestId(req));
     }
 
     @PostMapping("/groups/{groupId}/archive")
@@ -65,7 +67,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listMembers(currentUser(req), groupId, keyword, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listMembers(currentUser(req), groupId, keyword, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/groups/{groupId}/invites")
@@ -73,7 +76,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String groupId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.inviteMember(currentUser(req), groupId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.inviteMember(currentUser(req), groupId, safeBody(request)),
+                requestId(req));
     }
 
     @GetMapping("/groups/{groupId}/invites")
@@ -83,7 +87,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listInvites(currentUser(req), groupId, status, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listInvites(currentUser(req), groupId, status, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/groups/{groupId}/invites/{inviteId}/cancel")
@@ -108,13 +113,22 @@ public class TeamSpaceV2Controller {
         return ApiResponse.ok(teamSpaceV2Service.rejectInvite(currentUser(req), inviteToken), requestId(req));
     }
 
+    @GetMapping("/me/invites")
+    public ApiResponse<Map<String, Object>> myInvites(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+            HttpServletRequest req) {
+        return ApiResponse.ok(teamSpaceV2Service.listMyInvites(currentUser(req), page, pageSize), requestId(req));
+    }
+
     @PatchMapping("/groups/{groupId}/members/{userId}")
     public ApiResponse<Map<String, Object>> updateMemberRole(
             @PathVariable String groupId,
             @PathVariable String userId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.updateMemberRole(currentUser(req), groupId, userId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.updateMemberRole(currentUser(req), groupId, userId, safeBody(request)),
+                requestId(req));
     }
 
     @DeleteMapping("/groups/{groupId}/members/{userId}")
@@ -130,7 +144,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String groupId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.createJoinRequest(currentUser(req), groupId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.createJoinRequest(currentUser(req), groupId, safeBody(request)),
+                requestId(req));
     }
 
     @GetMapping("/me/group-join-requests")
@@ -148,7 +163,9 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listGroupJoinRequests(currentUser(req), groupId, status, page, pageSize), requestId(req));
+        return ApiResponse.ok(
+                teamSpaceV2Service.listGroupJoinRequests(currentUser(req), groupId, status, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/groups/{groupId}/join-requests/{requestId}/approve")
@@ -156,7 +173,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String groupId,
             @PathVariable String requestId,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.approveJoinRequest(currentUser(req), groupId, requestId), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.approveJoinRequest(currentUser(req), groupId, requestId),
+                requestId(req));
     }
 
     @PostMapping("/groups/{groupId}/join-requests/{requestId}/reject")
@@ -164,7 +182,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String groupId,
             @PathVariable String requestId,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.rejectJoinRequest(currentUser(req), groupId, requestId), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.rejectJoinRequest(currentUser(req), groupId, requestId),
+                requestId(req));
     }
 
     @PostMapping("/resources/{resourceId}/favorite")
@@ -173,7 +192,8 @@ public class TeamSpaceV2Controller {
     }
 
     @DeleteMapping("/resources/{resourceId}/favorite")
-    public ApiResponse<Map<String, Object>> unfavoriteResource(@PathVariable String resourceId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> unfavoriteResource(@PathVariable String resourceId,
+            HttpServletRequest req) {
         return ApiResponse.ok(teamSpaceV2Service.unfavoriteResource(currentUser(req), resourceId), requestId(req));
     }
 
@@ -223,7 +243,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String resourceId,
             @PathVariable String tagId,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.removeTagFromResource(currentUser(req), resourceId, tagId), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.removeTagFromResource(currentUser(req), resourceId, tagId),
+                requestId(req));
     }
 
     @GetMapping("/resources/{resourceId}/tags")
@@ -239,7 +260,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listResourceVersions(currentUser(req), resourceId, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listResourceVersions(currentUser(req), resourceId, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/resources/{resourceId}/versions/init")
@@ -247,7 +269,9 @@ public class TeamSpaceV2Controller {
             @PathVariable String resourceId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.initResourceVersionUpload(currentUser(req), resourceId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(
+                teamSpaceV2Service.initResourceVersionUpload(currentUser(req), resourceId, safeBody(request)),
+                requestId(req));
     }
 
     @PutMapping("/resources/{resourceId}/versions/{uploadId}/parts/{partNumber}")
@@ -257,9 +281,9 @@ public class TeamSpaceV2Controller {
             @PathVariable Integer partNumber,
             HttpServletRequest req) throws IOException {
         return ApiResponse.ok(
-                teamSpaceV2Service.uploadResourceVersionPart(currentUser(req), resourceId, uploadId, partNumber, req.getInputStream()),
-                requestId(req)
-        );
+                teamSpaceV2Service.uploadResourceVersionPart(currentUser(req), resourceId, uploadId, partNumber,
+                        req.getInputStream()),
+                requestId(req));
     }
 
     @PostMapping("/resources/{resourceId}/versions/{uploadId}/complete")
@@ -269,9 +293,9 @@ public class TeamSpaceV2Controller {
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
         return ApiResponse.ok(
-                teamSpaceV2Service.completeResourceVersionUpload(currentUser(req), resourceId, uploadId, safeBody(request)),
-                requestId(req)
-        );
+                teamSpaceV2Service.completeResourceVersionUpload(currentUser(req), resourceId, uploadId,
+                        safeBody(request)),
+                requestId(req));
     }
 
     @PostMapping("/resources/{resourceId}/versions/{versionNo}/restore")
@@ -281,8 +305,7 @@ public class TeamSpaceV2Controller {
             HttpServletRequest req) {
         return ApiResponse.ok(
                 teamSpaceV2Service.restoreResourceVersion(currentUser(req), resourceId, versionNo),
-                requestId(req)
-        );
+                requestId(req));
     }
 
     @GetMapping("/resources/{resourceId}/versions/{versionNo}/download-url")
@@ -291,9 +314,9 @@ public class TeamSpaceV2Controller {
             @PathVariable Integer versionNo,
             HttpServletRequest req) {
         return ApiResponse.ok(
-                teamSpaceV2Service.getResourceVersionDownloadUrl(currentUser(req), resourceId, versionNo, requestBaseUrl(req)),
-                requestId(req)
-        );
+                teamSpaceV2Service.getResourceVersionDownloadUrl(currentUser(req), resourceId, versionNo,
+                        requestBaseUrl(req)),
+                requestId(req));
     }
 
     @PostMapping("/resources/{resourceId}/preview-jobs")
@@ -301,7 +324,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String resourceId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.createPreviewJob(currentUser(req), resourceId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.createPreviewJob(currentUser(req), resourceId, safeBody(request)),
+                requestId(req));
     }
 
     @GetMapping("/preview-jobs/{jobId}")
@@ -315,7 +339,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listPreviewJobs(currentUser(req), status, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listPreviewJobs(currentUser(req), status, page, pageSize),
+                requestId(req));
     }
 
     @PatchMapping("/shares/{shareId}")
@@ -323,7 +348,8 @@ public class TeamSpaceV2Controller {
             @PathVariable String shareId,
             @RequestBody(required = false) Map<String, Object> request,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.updateSharePolicy(currentUser(req), shareId, safeBody(request)), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.updateSharePolicy(currentUser(req), shareId, safeBody(request)),
+                requestId(req));
     }
 
     @GetMapping("/shares/{shareId}/access-logs")
@@ -332,7 +358,8 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listShareAccessLogs(currentUser(req), shareId, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listShareAccessLogs(currentUser(req), shareId, page, pageSize),
+                requestId(req));
     }
 
     @GetMapping("/shares/{shareId}/stats")
@@ -346,11 +373,13 @@ public class TeamSpaceV2Controller {
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             @RequestParam(required = false, defaultValue = "false") Boolean unreadOnly,
             HttpServletRequest req) {
-        return ApiResponse.ok(teamSpaceV2Service.listNotifications(currentUser(req), unreadOnly, page, pageSize), requestId(req));
+        return ApiResponse.ok(teamSpaceV2Service.listNotifications(currentUser(req), unreadOnly, page, pageSize),
+                requestId(req));
     }
 
     @PostMapping("/notifications/{notificationId}/read")
-    public ApiResponse<Map<String, Object>> readNotification(@PathVariable String notificationId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> readNotification(@PathVariable String notificationId,
+            HttpServletRequest req) {
         return ApiResponse.ok(teamSpaceV2Service.readNotification(currentUser(req), notificationId), requestId(req));
     }
 
@@ -360,7 +389,8 @@ public class TeamSpaceV2Controller {
     }
 
     @DeleteMapping("/notifications/{notificationId}")
-    public ApiResponse<Map<String, Object>> deleteNotification(@PathVariable String notificationId, HttpServletRequest req) {
+    public ApiResponse<Map<String, Object>> deleteNotification(@PathVariable String notificationId,
+            HttpServletRequest req) {
         return ApiResponse.ok(teamSpaceV2Service.deleteNotification(currentUser(req), notificationId), requestId(req));
     }
 

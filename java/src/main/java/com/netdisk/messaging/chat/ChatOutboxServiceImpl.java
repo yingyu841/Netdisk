@@ -103,7 +103,25 @@ public class ChatOutboxServiceImpl implements ChatOutboxService {
             if (lock <= 0) {
                 continue;
             }
-            processOne(id, safe(str(row.get("event_type"))), safe(str(row.get("payload_json"))), intVal(row.get("retry_count")), intVal(row.get("max_retry")));
+            try {
+                processOne(id, safe(str(row.get("event_type"))), safe(str(row.get("payload_json"))), intVal(row.get("retry_count")), intVal(row.get("max_retry")));
+            } catch (Exception e) {
+                log.error("chat outbox processOne failed id={} eventType={}", id, str(row.get("event_type")), e);
+                int nextRetry = intVal(row.get("retry_count")) + 1;
+                int maxRetry = Math.max(1, intVal(row.get("max_retry")));
+                if (nextRetry >= maxRetry) {
+                    jdbcTemplate.update(
+                            "UPDATE chat_outbox_events SET status = ?, retry_count = ?, last_error = ?, updated_at = NOW() WHERE id = ?",
+                            STATUS_DEAD, nextRetry, e.getMessage(), id
+                    );
+                } else {
+                    int retryDelay = Math.max(1, appProperties.getChatMq().getOutboxRetryDelaySeconds());
+                    jdbcTemplate.update(
+                            "UPDATE chat_outbox_events SET status = ?, retry_count = ?, next_retry_at = DATE_ADD(NOW(), INTERVAL ? SECOND), last_error = ?, updated_at = NOW() WHERE id = ?",
+                            STATUS_RETRY, nextRetry, retryDelay, e.getMessage(), id
+                    );
+                }
+            }
             processed++;
         }
         if (processed > 0) {

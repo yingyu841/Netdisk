@@ -29,6 +29,13 @@
         LIMIT 1
     </select>
 
+    <select id="findByNickname" resultType="com.netdisk.pojo.entity.User">
+        SELECT id, user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at
+        FROM users
+        WHERE nickname = #{nickname}
+        LIMIT 1
+    </select>
+
     <select id="findById" resultType="com.netdisk.pojo.entity.User">
         SELECT id, user_uuid, email, mobile, password_hash, nickname, avatar_url, created_at
         FROM users
@@ -43,5 +50,20 @@
     <select id="countByMobile" resultType="java.lang.Integer">
         SELECT COUNT(1) FROM users WHERE mobile = #{mobile}
     </select>
+
+    <update id="updatePassword">
+        UPDATE users SET password_hash = #{passwordHash}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateProfile">
+        UPDATE users SET updated_at = NOW()
+        <if test="nickname != null and nickname != ''">
+            , nickname = #{nickname}
+        </if>
+        <if test="avatarUrl != null">
+            , avatar_url = #{avatarUrl}
+        </if>
+        WHERE id = #{id}
+    </update>
 
 </mapper>

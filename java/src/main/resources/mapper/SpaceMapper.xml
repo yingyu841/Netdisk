@@ -18,4 +18,16 @@
         VALUES (#{spaceUuid}, #{ownerUserId}, #{name}, #{spaceType}, #{status}, NOW(), NOW())
     </insert>
 
+    <select id="findPersonalSpaceUsage" resultType="java.util.HashMap">
+        SELECT
+            COALESCE(s.quota_bytes, 0) AS quotaBytes,
+            COALESCE(SUM(r.size_bytes), 0) AS usedBytes
+        FROM spaces s
+        LEFT JOIN resources r ON r.space_id = s.id AND r.is_deleted = 0
+        WHERE s.owner_user_id = #{ownerUserId}
+          AND s.space_type = 'personal'
+          AND s.status = 1
+        GROUP BY s.id, s.quota_bytes
+    </select>
+
 </mapper>

@@ -4,6 +4,8 @@ import com.netdisk.pojo.dto.LoginRequestDTO;
 import com.netdisk.pojo.dto.RefreshRequestDTO;
 import com.netdisk.pojo.dto.RegisterRequestDTO;
 import com.netdisk.pojo.dto.SendVerificationRequestDTO;
+import com.netdisk.pojo.dto.ChangePasswordRequestDTO;
+import com.netdisk.pojo.dto.UpdateProfileRequestDTO;
 import com.netdisk.pojo.vo.LoginResponseVO;
 import com.netdisk.pojo.vo.SessionVO;
 import com.netdisk.pojo.vo.TokenVO;
@@ -44,7 +46,8 @@ public class AuthController {
      * 发送验证码接口。
      */
     @PostMapping("/verification/send")
-    public ApiResponse<Void> sendVerification(@Valid @RequestBody SendVerificationRequestDTO request, HttpServletRequest req) {
+    public ApiResponse<Void> sendVerification(@Valid @RequestBody SendVerificationRequestDTO request,
+            HttpServletRequest req) {
         verificationService.send(request.getChannel(), request.getEmail(), request.getMobile());
         return ApiResponse.ok(null, requestId(req));
     }
@@ -90,6 +93,29 @@ public class AuthController {
     public ApiResponse<Void> deleteSession(@PathVariable String sessionId, HttpServletRequest request) {
         authService.deleteSession(String.valueOf(request.getAttribute("authUserId")), sessionId);
         return ApiResponse.ok(null, requestId(request));
+    }
+
+    @PostMapping("/password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request,
+            HttpServletRequest req) {
+        authService.changePassword(currentUser(req), request.getOldPassword(), request.getNewPassword());
+        return ApiResponse.ok(null, requestId(req));
+    }
+
+    @GetMapping("/profile")
+    public ApiResponse<UserProfileVO> getProfile(HttpServletRequest req) {
+        return ApiResponse.ok(authService.getProfile(currentUser(req)), requestId(req));
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<UserProfileVO> updateProfile(@Valid @RequestBody UpdateProfileRequestDTO request,
+            HttpServletRequest req) {
+        return ApiResponse.ok(authService.updateProfile(currentUser(req), request), requestId(req));
+    }
+
+    private String currentUser(HttpServletRequest req) {
+        Object val = req.getAttribute("authUserId");
+        return val == null ? "" : String.valueOf(val);
     }
 
     private String requestId(HttpServletRequest request) {

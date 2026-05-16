@@ -15,6 +15,9 @@ public class Space {
     private String name;
     private String spaceType;
     private Integer status;
+    private Long quotaBytes;
+    private Long usedBytes;
+    private Integer maxMembers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

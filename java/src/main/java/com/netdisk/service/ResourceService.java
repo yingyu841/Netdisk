@@ -116,4 +116,18 @@ public interface ResourceService {
      * 获取文件下载用临时访问 URL（本地存储 + 签名链接）。
      */
     Map<String, Object> buildDownloadFileUrl(String userUuid, String resourceUuid, String requestBaseUrl);
+
+    /**
+     * 刷新指定文件夹的大小（递归计算所有子项的字节数之和）。
+     *
+     * @param folderId 文件夹主键
+     */
+    void refreshFolderSize(Long folderId);
+
+    /**
+     * 批量刷新所有文件夹的大小（用于修复历史数据）。
+     *
+     * @return 刷新的文件夹数量
+     */
+    int refreshAllFolderSizes();
 }

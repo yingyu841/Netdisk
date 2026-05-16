@@ -24,6 +24,7 @@ import com.netdisk.pojo.vo.ResourceListResponseVO;
 import com.netdisk.pojo.vo.ResourceTreeNodeVO;
 import com.netdisk.service.ResourceService;
 import com.netdisk.service.UserResourceInitService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,7 @@ import java.time.LocalDateTime;
 /**
  * 资源服务实现。
  */
+@Slf4j
 @Service
 public class ResourceServiceImpl implements ResourceService {
     private final ResourceMapper resourceRepository;
@@ -216,6 +219,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+        Set<Long> affectedParentIds = new HashSet<>();
         for (String resourceUuid : resourceUuids) {
             Resource entity = requireActiveResource(normalizedUserUuid, resourceUuid);
             if (entity.getParentId() == null) {
@@ -225,6 +229,10 @@ public class ResourceServiceImpl implements ResourceService {
                 throw new BizException(ErrorCode.INVALID_PARAM, 400, "目标目录不能是资源自身");
             }
             ensureNotMoveToDescendant(entity, targetParent);
+
+            // 记录受影响的父文件夹
+            affectedParentIds.add(entity.getParentId());
+            affectedParentIds.add(targetParent.getId());
 
             String finalName = resolveUniqueName(
                     targetParent.getId(),
@@ -250,6 +258,11 @@ public class ResourceServiceImpl implements ResourceService {
             moved.put("name", entity.getName());
             moved.put("type", entity.getResourceType());
             items.add(moved);
+        }
+
+        // 刷新受影响的文件夹大小
+        for (Long parentId : affectedParentIds) {
+            refreshFolderSize(parentId);
         }
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
@@ -290,6 +303,9 @@ public class ResourceServiceImpl implements ResourceService {
             out.put("type", copied.getResourceType());
             items.add(out);
         }
+
+        // 刷新目标文件夹大小
+        refreshFolderSize(targetParent.getId());
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("copied", items.size());
@@ -354,6 +370,7 @@ public class ResourceServiceImpl implements ResourceService {
             throw new BizException(ErrorCode.CONFLICT, 409, "资源已在回收站");
         }
 
+        Long parentId = entity.getParentId();
         resourceRepository.softDeleteById(entity.getId());
         if ("folder".equals(entity.getResourceType())) {
             resourceRepository.softDeleteByPathPrefix(entity.getOwnerUserId(), appendSlash(entity.getPathCache()));
@@ -371,6 +388,9 @@ public class ResourceServiceImpl implements ResourceService {
         } else {
             resourceRepository.reactivateRecycleEntry(entry);
         }
+
+        // 刷新父文件夹大小
+        refreshFolderSize(parentId);
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", entity.getResourceUuid());
@@ -864,5 +884,34 @@ public class ResourceServiceImpl implements ResourceService {
             p = p + "/";
         }
         return p + trim(name);
+    }
+
+    @Override
+    public void refreshFolderSize(Long folderId) {
+        if (folderId == null) {
+            return;
+        }
+        Resource folder = resourceRepository.findById(folderId);
+        if (folder == null || !"folder".equals(folder.getResourceType())) {
+            return;
+        }
+        List<Resource> children = resourceRepository.listActiveChildrenByParentId(folder.getOwnerUserId(), folderId);
+        long totalSize = 0L;
+        for (Resource child : children) {
+            if (child.getSizeBytes() != null) {
+                totalSize += child.getSizeBytes();
+            }
+        }
+        resourceRepository.updateSizeBytes(folderId, totalSize);
+    }
+
+    @Override
+    public int refreshAllFolderSizes() {
+        List<Resource> allFolders = resourceRepository.listAllFolders();
+        for (Resource folder : allFolders) {
+            refreshFolderSize(folder.getId());
+        }
+        log.info("refreshAllFolderSizes: refreshed {} folders", allFolders.size());
+        return allFolders.size();
     }
 }

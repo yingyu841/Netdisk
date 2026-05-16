@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.mapper.AiAgentConversationMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_agent_conversation (user_uuid, conversation_id, role, content, tool_name, created_at)
+        VALUES (#{userUuid}, #{conversationId}, #{role}, #{content}, #{toolName}, NOW())
+    </insert>
+    <select id="findByUserAndConversation" resultType="com.netdisk.pojo.entity.AiAgentConversation">
+        SELECT id, user_uuid, conversation_id, role, content, tool_name, created_at
+        FROM ai_agent_conversation WHERE user_uuid = #{userUuid} AND conversation_id = #{conversationId} ORDER BY id ASC
+    </select>
+    <select id="findByUserUuid" resultType="com.netdisk.pojo.entity.AiAgentConversation">
+        SELECT id, user_uuid, conversation_id, role, content, tool_name, created_at
+        FROM ai_agent_conversation WHERE user_uuid = #{userUuid} ORDER BY id DESC LIMIT 1000
+    </select>
+    <delete id="deleteByConversationId">DELETE FROM ai_agent_conversation WHERE conversation_id = #{conversationId}</delete>
+    <delete id="deleteExpired">DELETE FROM ai_agent_conversation WHERE created_at &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)</delete>
+    <select id="countByConversationId" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM ai_agent_conversation WHERE conversation_id = #{conversationId}
+    </select>
+</mapper>

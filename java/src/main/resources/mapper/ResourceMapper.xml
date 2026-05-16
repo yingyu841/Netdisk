@@ -406,6 +406,29 @@
         ORDER BY r.parent_id ASC, r.name_normalized ASC, r.id ASC
     </select>
 
+    <select id="listAllFolders" resultType="com.netdisk.pojo.entity.Resource">
+        SELECT r.id,
+               r.resource_uuid,
+               r.space_id,
+               r.parent_id,
+               r.resource_type,
+               r.name,
+               r.name_normalized,
+               r.extension,
+               r.size_bytes,
+               r.object_id,
+               r.path_cache,
+               r.owner_user_id,
+               r.is_deleted,
+               r.deleted_at,
+               r.created_at,
+               r.updated_at
+        FROM resources r
+        WHERE r.resource_type = 'folder'
+          AND r.is_deleted = 0
+        ORDER BY r.parent_id ASC, r.id ASC
+    </select>
+
     <select id="countRecycleBin" resultType="java.lang.Long">
         SELECT COUNT(1)
         FROM recycle_entries e
@@ -599,5 +622,11 @@
             NOW()
         )
     </insert>
+
+    <update id="updateSizeBytes">
+        UPDATE resources
+        SET size_bytes = #{sizeBytes}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
 
 </mapper>

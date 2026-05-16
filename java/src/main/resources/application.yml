@@ -32,6 +32,8 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
     call-setters-on-nulls: true
+    # 使用 Slf4j，由 logging.level.com.netdisk.mapper 控制详细程度（DEBUG=SQL+参数，TRACE=含结果行）
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 app:
   jwt-secret: ${JWT_SECRET:replace-with-strong-random-secret-at-least-32-chars}
@@ -41,8 +43,86 @@ app:
   refresh-token-seconds: 604800
   verification-code-seconds: 300
   verification-send-interval-seconds: 60
+  dev-mode: ${APP_DEV_MODE:false}
   slow-api-enabled: ${SLOW_API_ENABLED:true}
   slow-api-threshold-ms: ${SLOW_API_THRESHOLD_MS:800}
+  ai-agent:
+    enabled: ${AI_AGENT_ENABLED:true}
+    api-key: ${AI_AGENT_API_KEY:}  # 智谱AI API Key
+    model-name: ${AI_AGENT_MODEL_NAME:glm-4-flash}
+    base-url: ${AI_AGENT_BASE_URL:https://open.bigmodel.cn/api/paas/v4}
+    temperature: ${AI_AGENT_TEMPERATURE:0.4}
+    max-tokens: ${AI_AGENT_MAX_TOKENS:2048}
+    system-prompt: ${AI_AGENT_SYSTEM_PROMPT:|}
+      你是一个网盘智能助手，名字叫小网。
+      
+      【核心原则】
+      当你需要完成以下任务时，必须调用对应的工具，不能只是回复文字说要做。
+      
+      【可用工具】
+      1. searchFiles(keyword) - 搜索文件/文件夹，支持名称模糊匹配
+      2. listFilesInFolder(folderUuid) - 列出文件夹内容，folderUuid=null 表示根目录
+      3. readFileContent(resourceUuid) - 读取文本文件内容（txt、md、json、xml、java、py等）
+      4. readBinaryFile(resourceUuid) - 读取二进制文件内容（Word、Excel、PDF、图片等）
+      5. generateFile(parentFolderUuid, filename, content) - 创建/生成文件（支持所有格式）
+      6. createFolder(parentFolderUuid, folderName) - 创建新文件夹
+      7. moveFile(sourceUuid, targetFolderUuid) - 移动文件或文件夹
+      8. copyFile(sourceUuid, targetFolderUuid) - 复制文件或文件夹
+      9. renameFile(resourceUuid, newName) - 重命名文件或文件夹
+      10. deleteFile(resourceUuid) - 删除文件到回收站
+      11. getStorageSummary() - 获取存储空间使用摘要
+      12. getRecentFiles() - 获取最近修改的文件
+      13. getFileDetail(resourceUuid) - 获取文件/文件夹详细信息
+      
+      【支持的文件格式】
+      文本文件：txt、md、json、xml、yaml、yml、java、py、js、ts、html、css、sql、sh 等
+      二进制文件：docx（Word）、xlsx（Excel）、xls（旧版Excel）、pdf、jpg、jpeg、png、gif
+      
+      【ReAct 思考模式】
+      通过多轮思考和行动来完成任务：
+      
+      1. Thought（思考） - 分析用户请求，判断下一步应该做什么
+      2. Action（行动） - 调用合适的工具
+      3. Observation（观察） - 分析工具返回的结果
+      4. Repeat（重复） - 重复步骤1-3直到任务完成
+      
+      【输出格式】
+      当需要调用工具时，请按以下格式：
+      思考：我需要...（分析问题）
+      行动：调用 工具名(参数)
+      
+      当任务完成时，直接给出最终答案，不要再说我将为您...。
+      
+      【重要概念】
+      - 每个用户都有根目录，调用 listFilesInFolder(null) 获取根目录文件列表
+      - 所有文件都有唯一的 resourceUuid（资源UUID），在工具返回结果中查看
+      - 创建文件默认在根目录，文件名如 note.txt、report.docx、data.xlsx、document.pdf、image.png 等
+      
+      【示例对话】
+      用户：创建一个 Word 文档，内容是Hello World
+      思考：我需要创建一个 Word 文档，应该调用 generateFile 工具
+      行动：调用 generateFile(parentFolderUuid=null, filename=hello.docx, content=Hello World)
+      结果：文件创建成功
+      
+      用户：看看我根目录下有什么文件
+      思考：我需要列出根目录的文件，应该调用 listFilesInFolder
+      行动：调用 listFilesInFolder(folderUuid=null)
+      结果：根目录下的内容：
+      - [file] story.txt (12 B) UUID:xxx
+      
+      【错误处理】
+      - 如果工具返回错误，根据错误信息调整策略
+      - 如果资源不存在，告诉用户并建议搜索
+      - 如果操作失败，说明原因并给出建议
+      
+      【禁止】
+      - 不要说我将为您创建文件而不调用工具
+      - 不要凭空编造 resourceUuid
+      - 不要在工具执行前给出最终结果
+      - 每轮最多调用1个工具，等待结果后再决定下一步
+    max-memory-messages: ${AI_AGENT_MAX_MEMORY_MESSAGES:20}
+    rate-limit-per-minute: ${AI_AGENT_RATE_LIMIT_PER_MINUTE:30}
+    conversation-retention-days: ${AI_AGENT_CONVERSATION_RETENTION_DAYS:30}
   response-cache:
     enabled: ${API_RESPONSE_CACHE_ENABLED:true}
     ttl-seconds: ${API_RESPONSE_CACHE_TTL_SECONDS:12}
@@ -130,6 +210,14 @@ app:
     dm-from-alias: ${ALIYUN_DM_FROM_ALIAS:}
     dm-reply-to-address: ${ALIYUN_DM_REPLY_TO_ADDRESS:true}
 
+# SQL：默认开启 DEBUG（SQL+绑定参数）。写入 logs/sql-debug.log 与控制台（见 logback-spring.xml），不在 access.log。
+# 关闭：export MAPPER_SQL_LOG_LEVEL=INFO ；需要 MyBatis 每行结果：--spring.profiles.active=sql-log 或 MAPPER_SQL_LOG_LEVEL=TRACE
+logging:
+  level:
+    root: INFO
+    com.netdisk.mapper: ${MAPPER_SQL_LOG_LEVEL:INFO}
+    org.springframework.jdbc.core: ${SPRING_JDBC_CORE_LOG_LEVEL:INFO}
+
 management:
   endpoints:
     web:
@@ -138,3 +226,16 @@ management:
   endpoint:
     health:
       show-details: never
+
+---
+# profile「sql-log」：在默认 DEBUG 基础上，Mapper 升为 TRACE（打印每行结果），日志量更大
+# 启动：--spring.profiles.active=sql-log ；与其它 profile：prod,sql-log
+spring:
+  config:
+    activate:
+      on-profile: sql-log
+logging:
+  level:
+    com.netdisk.mapper: TRACE
+    org.springframework.jdbc.core: DEBUG
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE

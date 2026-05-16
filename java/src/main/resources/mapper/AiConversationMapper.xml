@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.mapper.AiConversationMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_conversations (user_uuid, conversation_id, title, created_at, updated_at)
+        VALUES (#{userUuid}, #{conversationId}, #{title}, NOW(), NOW())
+    </insert>
+
+    <select id="findByConversationId" resultType="com.netdisk.pojo.entity.AiConversation">
+        SELECT id, user_uuid, conversation_id, title, created_at, updated_at
+        FROM ai_conversations WHERE conversation_id = #{conversationId}
+    </select>
+
+    <select id="findByUserUuid" resultType="com.netdisk.pojo.entity.AiConversation">
+        SELECT id, user_uuid, conversation_id, title, created_at, updated_at
+        FROM ai_conversations WHERE user_uuid = #{userUuid} ORDER BY updated_at DESC
+    </select>
+
+    <update id="updateTitle">
+        UPDATE ai_conversations SET title = #{title}, updated_at = NOW()
+        WHERE conversation_id = #{conversationId}
+    </update>
+
+    <delete id="deleteByConversationId">
+        DELETE FROM ai_conversations WHERE conversation_id = #{conversationId}
+    </delete>
+
+    <delete id="deleteExpired">
+        DELETE FROM ai_conversations WHERE updated_at &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)
+    </delete>
+</mapper>

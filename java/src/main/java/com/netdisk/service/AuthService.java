@@ -2,6 +2,7 @@ package com.netdisk.service;
 
 import com.netdisk.pojo.dto.LoginRequestDTO;
 import com.netdisk.pojo.dto.RegisterRequestDTO;
+import com.netdisk.pojo.dto.UpdateProfileRequestDTO;
 import com.netdisk.pojo.vo.LoginResponseVO;
 import com.netdisk.pojo.vo.SessionVO;
 import com.netdisk.pojo.vo.TokenVO;
@@ -55,8 +56,20 @@ public interface AuthService {
     /**
      * 删除指定会话。
      *
-     * @param userUuid 用户业务ID
+     * @param userUuid    用户业务ID
      * @param sessionUuid 会话业务ID
      */
     void deleteSession(String userUuid, String sessionUuid);
+
+    void changePassword(String userUuid, String oldPassword, String newPassword);
+
+    UserProfileVO updateProfile(String userUuid, UpdateProfileRequestDTO request);
+
+    /**
+     * 获取当前用户信息。
+     *
+     * @param userUuid 用户业务ID
+     * @return 用户资料
+     */
+    UserProfileVO getProfile(String userUuid);
 }

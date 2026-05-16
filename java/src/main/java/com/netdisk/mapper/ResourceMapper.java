@@ -281,4 +281,20 @@ public interface ResourceMapper {
      * @return 目录列表
      */
     List<Resource> listFoldersByUserUuid(String userUuid);
+
+    /**
+     * 查询系统中全部未删除的目录资源（用于批量刷新大小）。
+     *
+     * @return 所有文件夹列表
+     */
+    List<Resource> listAllFolders();
+
+    /**
+     * 更新资源的大小字节数。
+     *
+     * @param id 资源主键
+     * @param sizeBytes 新的字节数
+     * @return 影响行数
+     */
+    int updateSizeBytes(@Param("id") Long id, @Param("sizeBytes") Long sizeBytes);
 }

@@ -41,6 +41,14 @@ public interface UserMapper {
     User findByMobile(String mobile);
 
     /**
+     * 根据昵称查询用户。
+     *
+     * @param nickname 昵称
+     * @return 用户实体
+     */
+    User findByNickname(String nickname);
+
+    /**
      * 根据主键查询用户。
      */
     User findById(Long id);
@@ -60,4 +68,8 @@ public interface UserMapper {
      * @return 数量
      */
     int countByMobile(String mobile);
+
+    int updatePassword(Long id, String passwordHash);
+
+    int updateProfile(Long id, String nickname, String avatarUrl);
 }

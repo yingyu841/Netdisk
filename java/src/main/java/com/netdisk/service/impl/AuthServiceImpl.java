@@ -2,6 +2,7 @@ package com.netdisk.service.impl;
 
 import com.netdisk.pojo.dto.LoginRequestDTO;
 import com.netdisk.pojo.dto.RegisterRequestDTO;
+import com.netdisk.pojo.dto.UpdateProfileRequestDTO;
 import com.netdisk.pojo.entity.User;
 import com.netdisk.pojo.entity.UserSession;
 import com.netdisk.mapper.UserMapper;
@@ -40,8 +41,10 @@ public class AuthServiceImpl implements AuthService {
     private final AppProperties properties;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public AuthServiceImpl(UserMapper userRepository, UserSessionMapper sessionRepository, VerificationService verificationService,
-                           UserResourceInitService userResourceInitService, JwtTokenProvider jwtTokenProvider, AppProperties properties) {
+    public AuthServiceImpl(UserMapper userRepository, UserSessionMapper sessionRepository,
+            VerificationService verificationService,
+            UserResourceInitService userResourceInitService, JwtTokenProvider jwtTokenProvider,
+            AppProperties properties) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.verificationService = verificationService;
@@ -175,6 +178,52 @@ public class AuthServiceImpl implements AuthService {
         sessionRepository.revokeBySessionUuid(sessionUuid);
     }
 
+    @Override
+    public void changePassword(String userUuid, String oldPassword, String newPassword) {
+        User user = userRepository.findByUserUuid(userUuid);
+        if (user == null) {
+            throw new BizException(ErrorCode.NOT_FOUND, 404, "用户不存在");
+        }
+        if (oldPassword == null || oldPassword.length() < 8) {
+            throw new BizException(ErrorCode.INVALID_PARAM, 400, "旧密码长度不能少于8位");
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new BizException(ErrorCode.INVALID_PARAM, 400, "新密码长度不能少于8位");
+        }
+        if (!encoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new BizException(ErrorCode.UNAUTHORIZED, 401, "旧密码错误");
+        }
+        String newHash = encoder.encode(newPassword);
+        int updated = userRepository.updatePassword(user.getId(), newHash);
+        if (updated <= 0) {
+            throw new BizException(ErrorCode.INTERNAL, 500, "更新密码失败");
+        }
+    }
+
+    @Override
+    public UserProfileVO updateProfile(String userUuid, UpdateProfileRequestDTO request) {
+        User user = userRepository.findByUserUuid(userUuid);
+        if (user == null) {
+            throw new BizException(ErrorCode.NOT_FOUND, 404, "用户不存在");
+        }
+        int updated = userRepository.updateProfile(user.getId(), request.getNickname(), request.getAvatarUrl());
+        if (updated <= 0) {
+            throw new BizException(ErrorCode.INTERNAL, 500, "更新资料失败");
+        }
+        // 返回更新后的用户信息
+        User updatedUser = userRepository.findByUserUuid(userUuid);
+        return new UserProfileVO(updatedUser.getUserUuid(), updatedUser.getNickname(), updatedUser.getAvatarUrl());
+    }
+
+    @Override
+    public UserProfileVO getProfile(String userUuid) {
+        User user = userRepository.findByUserUuid(userUuid);
+        if (user == null) {
+            throw new BizException(ErrorCode.NOT_FOUND, 404, "用户不存在");
+        }
+        return new UserProfileVO(user.getUserUuid(), user.getNickname(), user.getAvatarUrl());
+    }
+
     private LoginResponseVO issueToken(User user, String clientType, String deviceId, String deviceName) {
         if (!"web".equals(clientType) && !"android".equals(clientType)) {
             throw new BizException(ErrorCode.INVALID_PARAM, 400, "参数错误");
@@ -186,13 +235,15 @@ public class AuthServiceImpl implements AuthService {
         session.setClientType(clientType);
         session.setDeviceId(trim(deviceId).isEmpty() ? "device-" + UUID.randomUUID() : trim(deviceId));
         session.setDeviceName(trim(deviceName).isEmpty() ? clientType : trim(deviceName));
-        String refreshToken = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
+        String refreshToken = UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "");
         session.setRefreshTokenHash(sha256(refreshToken));
         session.setExpiresAt(LocalDateTime.now().plusSeconds(properties.getRefreshTokenSeconds()));
         session.setCreatedAt(LocalDateTime.now());
         sessionRepository.insert(session);
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getUserUuid(), session.getSessionUuid(), properties.getAccessTokenSeconds());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getUserUuid(), session.getSessionUuid(),
+                properties.getAccessTokenSeconds());
         LoginResponseVO data = new LoginResponseVO();
         data.setAccessToken(accessToken);
         data.setRefreshToken(refreshToken);
@@ -233,7 +284,12 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private String trim(String v) { return v == null ? "" : v.trim(); }
-    private String safeLower(String v) { return trim(v).toLowerCase(); }
+    private String trim(String v) {
+        return v == null ? "" : v.trim();
+    }
+
+    private String safeLower(String v) {
+        return trim(v).toLowerCase();
+    }
 
 }
